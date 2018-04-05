@@ -1,0 +1,19 @@
+{
+  "name": "websockets",
+  "version": "1.0.0",
+  "description": "A chat using websockets",
+  "main": "chat.js",
+  "author": "Jens Niederreiter",
+  "dependencies": {
+    "@types/express": "^4.11.1",
+    "@types/jquery": "^3.3.0",
+    "@types/socket.io": "^1.4.31",
+    "@types/socket.io-client": "^1.4.32",
+    "express": "^4.15.2",
+    "jquery": "^3.3.1",
+    "socket.io": "^1.7.3"
+  },
+  "devDependencies": {
+    "nodemon": "^1.11.0"
+  }
+}
