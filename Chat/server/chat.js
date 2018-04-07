@@ -6,6 +6,7 @@ var socket = require("socket.io");
 var router = express();
 var server = router.listen(4000, function () {
     console.log("server started");
+    console.log('start server with http://localhost:4000/');
 });
 //route static files
 router.use(express.static(__dirname + '/../client'));

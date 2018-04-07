@@ -3,8 +3,10 @@ var socket = io.connect(window.location.protocol + "//" + window.location.host);
 //socket EventHandlers
 socket.on('chat', function (data) {
     var output = $('#output');
+    var message = $('#message');
     output.html(output.html() + '<p>' + data.username + ": " + data.message + '</p>');
     $('#feedback').html("");
+    message.html('');
 });
 socket.on('typing', function (data) {
     $('#feedback').html('<p>' + data + ' ' + 'is typing a message...</p>');
@@ -40,6 +42,11 @@ $(function () {
     });
     $('#erase').on('click', function () {
         sendErase();
+    });
+    $('#message').on('keydown', function (event) {
+        if (event.keyCode == 13) {
+            sendMessage();
+        }
     });
     $('#message').on('keyup', function () {
         sendUserIsTyping();

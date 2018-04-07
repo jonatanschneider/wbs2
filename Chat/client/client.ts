@@ -4,8 +4,10 @@ let socket = io.connect(window.location.protocol + "//" + window.location.host);
 //socket EventHandlers
 socket.on('chat', function(data){
     let output : JQuery = $('#output');
+    let message : JQuery = $('#message');
     output.html(output.html() + '<p>' + data.username + ": " + data.message + '</p>');
     $('#feedback').html("");
+    message.html('');
 });
 
 socket.on('typing', function (data) {
@@ -48,7 +50,12 @@ $(function () {
     $('#erase').on('click', function () {
         sendErase();
     })
+    $('#message').on('keydown', (event) => {
+        if(event.keyCode == 13){
+            sendMessage();
+        }
+    });
     $('#message').on('keyup', () => {
         sendUserIsTyping();
-    })
+    });
 });
