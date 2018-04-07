@@ -3,11 +3,11 @@ var socket = io.connect(window.location.protocol + "//" + window.location.host);
 //socket EventHandlers
 socket.on('chat', function (data) {
     var output = $('#output');
-    output.html(output.html() + data.username + " " + data.message);
+    output.html(output.html() + '<p>' + data.username + ": " + data.message + '</p>');
     $('#feedback').html("");
 });
 socket.on('typing', function (data) {
-    $('#feedback').html(data + ' ' + 'is typing a message...');
+    $('#feedback').html('<p>' + data + ' ' + 'is typing a message...</p>');
 });
 //DOM EventHandlers
 function sendMessage() {
@@ -20,10 +20,15 @@ function sendMessage() {
     message.html('');
 }
 function sendUserIsTyping() {
+    var username = $('#username');
+    socket.emit('typing', username.val());
 }
 // main callback
 $(function () {
     $('#send').on('click', function () {
         sendMessage();
+    });
+    $('#message').on('keyup', function () {
+        sendUserIsTyping();
     });
 });
