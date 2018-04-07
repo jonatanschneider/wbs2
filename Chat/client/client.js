@@ -9,6 +9,11 @@ socket.on('chat', function (data) {
 socket.on('typing', function (data) {
     $('#feedback').html('<p>' + data + ' ' + 'is typing a message...</p>');
 });
+socket.on('erase', function (data) {
+    var output = $('#output');
+    output.html('');
+    $('#feedback').html('');
+});
 //DOM EventHandlers
 function sendMessage() {
     var message = $('#message');
@@ -23,10 +28,18 @@ function sendUserIsTyping() {
     var username = $('#username');
     socket.emit('typing', username.val());
 }
+function sendErase() {
+    var username = $('username');
+    var message = $('message');
+    socket.emit('erase', username.val());
+}
 // main callback
 $(function () {
     $('#send').on('click', function () {
         sendMessage();
+    });
+    $('#erase').on('click', function () {
+        sendErase();
     });
     $('#message').on('keyup', function () {
         sendUserIsTyping();

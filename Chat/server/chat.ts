@@ -5,6 +5,7 @@ import socket = require('socket.io');
 let router = express();
 let server = router.listen(4000, function () {
     console.log("server started")
+
 });
 
 //route static files
@@ -27,4 +28,6 @@ io.on('connection', (socket) => {
     socket.on('typing', function (data) {
         socket.broadcast.emit('typing', data);
     });
+    socket.on('erase', (data) =>
+    socket.broadcast.emit('erase', data));
 });
