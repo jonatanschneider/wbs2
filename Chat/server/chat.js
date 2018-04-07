@@ -8,7 +8,7 @@ var server = router.listen(4000, function () {
     console.log("server started");
 });
 //route static files
-router.use(express.static('../client'));
+router.use(express.static(__dirname + '/../client'));
 //Socket setup and pass server
 var io = socket(server);
 io.on('connection', function (socket) {

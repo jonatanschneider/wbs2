@@ -14,7 +14,7 @@ function sendMessage() {
     var message = $('#message');
     var username = $('#username');
     socket.emit('chat', {
-        username: message.val(),
+        username: username.val(),
         message: message.val()
     });
     message.html('');
