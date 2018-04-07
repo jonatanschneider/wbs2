@@ -108,3 +108,6 @@ typings/
 
 # dotenv environment variables file
 .env
+
+.idea/workspace.xml
+.idea/typescript-compiler.xml
