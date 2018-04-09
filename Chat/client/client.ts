@@ -52,6 +52,8 @@ $(function() {
         }
     });
     $('#message').on('keyup', () => {
-        sendUserIsTyping();
+        if($('#message').val()) {
+            sendUserIsTyping();
+        }
     });
 });
