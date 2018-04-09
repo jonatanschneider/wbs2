@@ -19,7 +19,7 @@ socket.on('erase', function (data) {
 });
 
 // DOM EventHandlers
-function sendMessage(){
+function sendMessage() {
     let message : JQuery = $('#message');
     let username : JQuery = $('#username');
     socket.emit('chat', {
@@ -29,23 +29,23 @@ function sendMessage(){
     message.val('');
 }
 
-function sendUserIsTyping(){
+function sendUserIsTyping() {
     socket.emit('typing', $('#username').val());
 }
 
-function sendErase(){
+function sendErase() {
     let username : JQuery = $('username');
     socket.emit('erase', username.val());
 }
 
 // main callback
-$(function () {
     $('#send').on('click', function () {
         sendMessage();
     });
     $('#erase').on('click', function () {
         sendErase();
     })
+$(function() {
     $('#message').on('keydown', (event) => {
         if(event.keyCode == 13) {
             sendMessage();
