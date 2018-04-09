@@ -8,6 +8,7 @@
 Chat/node_modules/*/*/*
 
 # Generated Javascript files
+*.js.map
 *.js
 
 # Sensitive or high-churn files:
