@@ -3,22 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
-    <script src ="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.js"></script>
-    <script src ="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src ="/client.js"></script>
-    <link href="/styles.css" rel="stylesheet" />
+    <!-- Bootstrap dependencies (first) -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+            integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+            crossorigin="anonymous"></script>
+
+    <!-- Socket io -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.js"></script>
+
+    <!-- Custom dependencies -->
+    <script src="/client.js"></script>
+    <link href="styles.css" rel="stylesheet"/>
 </head>
 <body>
-<div id="chat">
-    <h2>UserMan Chat</h2>
-    <div id="chat-window">
-        <div id="output"></div>
-        <div id="feedback"></div>
+
+<nav class="navbar navbar-light bg-light">
+    <span class="navbar-brand mb-0 h1">UserMan Chat</span>
+</nav>
+
+<div class="container">
+    <div class="row">
+        <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-6 offset-sm-1 offset-md-2 offset-lg-3 offset-xl-3">
+            <div class="card" id="window">
+                <div class="card-header">
+                    Nachrichten:
+                </div>
+                <div class="card-body" id="output">
+
+                </div>
+                <div class="card-body" id="feedback">
+
+                </div>
+                <div class="card-body">
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <button id="erase" type="button" class="btn btn-danger">Erase</button>
+                        </div>
+                        <input type="text" class="form-control" placeholder="Username" id="username" required>
+                        <input type="text" class="form-control" placeholder="Message" id="message" required>
+                        <div class="input-group-append">
+                            <button id="send" type="submit" class="btn btn-primary">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <input id="username" type="text" placeholder="Username" />
-    <input id="message" type="text" placeholder="Message" />
-    <button id="send">Send</button>
-    <button id="erase">Erase</button>
 </div>
 </body>
 </html>
