@@ -20,11 +20,11 @@ socket.on('erase', function (data) {
 
 // DOM EventHandlers
 function sendMessage() {
-    let message : JQuery = $('#message');
-    let username : JQuery = $('#username');
+    let message: JQuery = $('#message');
+    let username: JQuery = $('#username');
     socket.emit('chat', {
-        username : username.val(),
-        message : message.val()
+        username: username.val(),
+        message: message.val()
     });
     message.val('');
 }
@@ -34,7 +34,7 @@ function sendUserIsTyping() {
 }
 
 function sendErase() {
-    let username : JQuery = $('username');
+    let username: JQuery = $('username');
     socket.emit('erase', username.val());
 }
 
