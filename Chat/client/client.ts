@@ -39,13 +39,9 @@ function sendErase() {
 }
 
 // main callback
-    $('#send').on('click', function () {
-        sendMessage();
-    });
-    $('#erase').on('click', function () {
-        sendErase();
-    })
 $(function() {
+    $('#send').on('click', sendMessage);
+    $('#erase').on('click', sendErase);
     $('#message').on('keydown', (event) => {
         if(event.keyCode == 13) {
             sendMessage();
