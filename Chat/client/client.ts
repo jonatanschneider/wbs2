@@ -28,7 +28,7 @@ function sendMessage(){
         username : username.val(),
         message : message.val()
     });
-    message.html('');
+    message.val('');
 }
 
 function sendUserIsTyping(){
