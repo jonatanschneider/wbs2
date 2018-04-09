@@ -1,9 +1,9 @@
-//Create connection
+// Create connection
 let socket = io.connect(window.location.protocol + "//" + window.location.host);
 
-//socket EventHandlers
-socket.on('chat', function(data){
-    let output : JQuery = $('#output');
+// socket EventHandlers
+socket.on('chat', function(data) {
+    let output: JQuery = $('#output');
     let message : JQuery = $('#message');
     output.html(output.html() + '<p>' + data.username + ": " + data.message + '</p>');
     $('#feedback').html("");
@@ -15,12 +15,12 @@ socket.on('typing', function (data) {
 });
 
 socket.on('erase', function (data) {
-    let output :JQuery = $('#output');
+    let output : JQuery = $('#output');
     output.html('');
     $('#feedback').html('');
-})
+});
 
-//DOM EventHandlers
+// DOM EventHandlers
 function sendMessage(){
     let message : JQuery = $('#message');
     let username : JQuery = $('#username');
@@ -51,7 +51,7 @@ $(function () {
         sendErase();
     })
     $('#message').on('keydown', (event) => {
-        if(event.keyCode == 13){
+        if(event.keyCode == 13) {
             sendMessage();
         }
     });
