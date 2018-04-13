@@ -1,0 +1,102 @@
+/*--- width of contents (responsive) ----------------------------------------*/
+.w3-main {
+    width      : 600px;
+    margin     : 0 auto;
+}
+@media (max-width: 600px) {
+    .w3-main {
+        width    : 100%;
+    }
+}
+
+
+
+/*--- Non-model Areas ---------------------------------------------------------*/
+#headArea {
+    height     : 40px;
+}
+#loginArea {
+    margin-top : 40px;
+    height     : 60px;
+}
+#contentArea {
+    display    : none;
+}
+#contentArea > div {
+    margin     : 20px 0;
+}
+
+#pagination {
+    position : fixed;
+    top      : 660px;
+    left     : 250px;
+}
+
+/*--- Modal Areas -----------------------------------------------------------*/
+.w3-modal-content {
+    margin     : 0 auto;
+}
+
+
+/*--- result window ---------------------------------------------------------*/
+#resultWindow.w3-modal {
+    padding-top      : 40px;
+    z-index          : 10;
+}
+#result {
+    padding          : 16px;
+    min-height       : 120px;
+}
+
+/*--- edit window -----------------------------------------------------------*/
+#editWindow.w3-modal {
+    padding-top      : 260px;
+    z-index          : 5;
+}
+
+/*--- settings window -------------------------------------------------------*/
+#settingsWindow.w3-modal {
+    padding-top      : 260px;
+    z-index          : 5;
+}
+
+
+
+/*--- Text in userlist ------------------------------------------------------*/
+.vornameText, .nachnameText{
+    display    : inline-block;
+    width      : 40%;
+}
+
+/*--- Define Buttons --------------------------------------------------------*/
+.w3-btn, .w3-button {
+    width        : 40px;
+    height       : 40px;
+}
+.fa {
+    padding : 12px;
+}
+.fa-trash {
+    padding : 0;
+}
+.fa-lock {
+    padding : 0 12px;
+}
+
+.w3-block {
+    width : 100%;  /* needed since w3-button width is smaller */
+}
+
+/*--- Define Class to be added, when li has to be hidden --------------------*/
+/* ul.w3-ul li.hide { */
+.hide {
+    display : none;
+}
+
+/*--- Define Cursor ---------------------------------------------------------*/
+li:hover {
+    cursor  : alias;
+}
+span.fa-trash:hover {
+    cursor  : pointer;
+}
