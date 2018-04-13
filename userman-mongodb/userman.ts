@@ -1,48 +1,45 @@
 /*****************************************************************************
  ***  Import some module from node.js (see: expressjs.com/en/4x/api.html)    *
  *****************************************************************************/
-import * as express    from "express";         // routing
+import * as express from "express";         // routing
 import * as bodyParser from "body-parser";     // parsing parameters
-import * as session    from "express-session"; // sessions
-import * as cryptoJS   from "crypto-js";       // crypting
-import * as db         from "mysql";           // mysql database
-import * as socket     from "socket.io";
+import * as session from "express-session"; // sessions
+import * as cryptoJS from "crypto-js";       // crypting
+import * as db from "mysql";           // mysql database
+import * as socket from "socket.io";
 
-import {Request, Response}      from "express";
-import {Connection, MysqlError} from "mysql";
+import {Request, Response} from "express";
+import {Db, MongoClient, MongoError} from "mongodb";
+// import {Connection, MysqlError} from "mysql";
 
 /*****************************************************************************
  ***  setup database and its structure                                       *
  *****************************************************************************/
 //---- Object with connection parameters --------------------------------------
-let connection: Connection = db.createConnection({
-  host     : 'localhost',
-  user     : 'root',
-  password : '',
-  database : 'userman'
+let usermanDb:Db;
+
+MongoClient.connect("mongodb://localhost:27017").then((dbClient: MongoClient) => {
+    usermanDb = dbClient.db("userman");
+    console.log("Database is connected! \n");
+}).catch((err: MongoError) => {
+    console.error("Error connection to database\n" + err);
 });
-//---- connect to database ----------------------------------------------------
-connection.connect(function (err) {
-  if (!err) {
-    console.log("Database is connected ...\n");
-  } else {
-    console.log("Error connecting database ...\n" + err);
-  }
-});
+
 //--- Data structure that represents a user in database -----------------------
 class User {
-  id       : number;
-  time     : string; // time-time format defined[RFC 3339] e.g. 2017-12-31T23:59:6
-  username : string;
-  vorname  : string;
-  nachname : string;
-  constructor(id:number, time:string, username:string, vorname:string, nachname:string) {
-    this.id       = id;
-    this.time     = time;
-    this.username = username;
-    this.vorname  = vorname;
-    this.nachname = nachname;
-  }
+    id: number;
+    time: string; // time-time format defined[RFC 3339] e.g. 2017-12-31T23:59:6
+    username: string;
+    vorname: string;
+    nachname: string;
+
+    constructor(id: number, time: string, username: string, vorname: string, nachname: string) {
+        this.id = id;
+        this.time = time;
+        this.username = username;
+        this.vorname = vorname;
+        this.nachname = nachname;
+    }
 }
 
 /*****************************************************************************
@@ -50,17 +47,17 @@ class User {
  *****************************************************************************/
 let router = express();
 let server = router.listen(8080, function () {
-  console.log("");
-  console.log("-------------------------------------------------------------");
-  console.log("  userMan (complete)");
-  console.log("  (Dokumentation als API-Doc)");
-  console.log("  Dokumentation erstellen mit (im Terminal von webStorm)");
-  console.log("     'apidoc -o apidoc -e node_modules' ");
-  console.log("  Dokumentation aufrufen:");
-  console.log("     Doppelklick auf: apidoc/index.html ");
-  console.log("");
-  console.log("  Aufruf: http://localhost:8080/views/client.html");
-  console.log("-------------------------------------------------------------");
+    console.log("");
+    console.log("-------------------------------------------------------------");
+    console.log("  userMan (complete)");
+    console.log("  (Dokumentation als API-Doc)");
+    console.log("  Dokumentation erstellen mit (im Terminal von webStorm)");
+    console.log("     'apidoc -o apidoc -e node_modules' ");
+    console.log("  Dokumentation aufrufen:");
+    console.log("     Doppelklick auf: apidoc/index.html ");
+    console.log("");
+    console.log("  Aufruf: http://localhost:8080/views/client.html");
+    console.log("-------------------------------------------------------------");
 });
 
 /*****************************************************************************
@@ -68,19 +65,19 @@ let server = router.listen(8080, function () {
  *****************************************************************************/
 let io = socket(server);
 io.on('connection', (socket) => {
-	console.log('made socket connection', socket.id);
-	//--- Handle lock event -----------------------------------------------------
-	socket.on('lock', function( user ){
-		socket.broadcast.emit('lock', user);
-	});
-	//--- Handle update event ---------------------------------------------------
-	socket.on('update', function(){
-		socket.broadcast.emit('update');
-	});
-	//--- Handle disconnect event -----------------------------------------------
-	socket.on('disconnect', function(){
-		socket.broadcast.emit('update');
-	});
+    console.log('made socket connection', socket.id);
+    //--- Handle lock event -----------------------------------------------------
+    socket.on('lock', function (user) {
+        socket.broadcast.emit('lock', user);
+    });
+    //--- Handle update event ---------------------------------------------------
+    socket.on('update', function () {
+        socket.broadcast.emit('update');
+    });
+    //--- Handle disconnect event -----------------------------------------------
+    socket.on('disconnect', function () {
+        socket.broadcast.emit('update');
+    });
 });
 
 /*****************************************************************************
@@ -88,59 +85,66 @@ io.on('connection', (socket) => {
  *****************************************************************************/
 //--- Class that deals with Rights --------------------------------------------
 class Rights {
-  admin      : boolean; // user is administrator
-  superadmin : boolean; // user is super-administrator
-  // can be extended here with other user-roles
-  constructor(admin: boolean, superadmin: boolean) {
-    this.admin      = admin;
-    this.superadmin = superadmin;
-    // can be extended here with other user roles
-  }
+    admin: boolean; // user is administrator
+    superadmin: boolean; // user is super-administrator
+    // can be extended here with other user-roles
+    constructor(admin: boolean, superadmin: boolean) {
+        this.admin = admin;
+        this.superadmin = superadmin;
+        // can be extended here with other user roles
+    }
 }
+
 //--- checkRight, is there still a session and are the rights sufficient ------
-function checkRights(req: Request, res: Response, rights: Rights) : boolean {
-  let response : { message  : string;
-                   userList : User[];
-                   user     : User;
-                   username : string };
+function checkRights(req: Request, res: Response, rights: Rights): boolean {
+    let response: {
+        message: string;
+        userList: User[];
+        user: User;
+        username: string
+    };
 
-  //--- check if session is existing ------------------------------------------
-  if (!req.session.rights) {
-    response = { message  : "No session: Please log in",
-                 userList : null,
-                 user     : null,
-                 username : null  };
-    res.status(401);     // set HTTP response state
-    res.json(response);  // send HTTP-response
-    return false;
-  }
+    //--- check if session is existing ------------------------------------------
+    if (!req.session.rights) {
+        response = {
+            message: "No session: Please log in",
+            userList: null,
+            user: null,
+            username: null
+        };
+        res.status(401);     // set HTTP response state
+        res.json(response);  // send HTTP-response
+        return false;
+    }
 
-  //--- check rights against the needed rights (provided as parameter) --------
-  else  {
-    let rightsOK : boolean = true;
-    let message  : string  = "unsufficient rights";
-    if (rights.admin) {  // checks if "admin" is needed
-      rightsOK = rightsOK && req.session.rights.admin;
-      message += ": not logged in"
+    //--- check rights against the needed rights (provided as parameter) --------
+    else {
+        let rightsOK: boolean = true;
+        let message: string = "unsufficient rights";
+        if (rights.admin) {  // checks if "admin" is needed
+            rightsOK = rightsOK && req.session.rights.admin;
+            message += ": not logged in"
+        }
+        if (rights.superadmin) { // ckecks if "superadmin" is needed
+            rightsOK = rightsOK && req.session.rights.superadmin;
+            message += ", not admin";
+        }
+        // can be extended here checking other user roles
+        if (!rightsOK) {
+            response = {
+                message: message,
+                userList: null,
+                user: null,
+                username: null
+            };
+            res.status(401);     // set HTTP response state
+            res.json(response);  // send HTTP-response
+            return false;
+        }
     }
-    if (rights.superadmin) { // ckecks if "superadmin" is needed
-      rightsOK = rightsOK && req.session.rights.superadmin;
-      message += ", not admin";
-    }
-    // can be extended here checking other user roles
-    if (! rightsOK) {
-      response = { message  : message,
-                   userList : null,
-                   user     : null,
-                   username : null };
-      res.status(401);     // set HTTP response state
-      res.json(response);  // send HTTP-response
-      return false;
-    }
-  }
 
-  //--- return TRUE if everthing was o.k. --------------------------------------
-  return true;
+    //--- return TRUE if everthing was o.k. --------------------------------------
+    return true;
 
 }
 
@@ -150,68 +154,98 @@ function checkRights(req: Request, res: Response, rights: Rights) : boolean {
  *** Function that is called by each route to send data                      *
  *** gets userList from database , constructs and send response              *
  *****************************************************************************/
-function sendData(status : number, res : Response,
+function sendData(status: number, res: Response,
                   message: string, user: User, username: string) {
-  /*
-    status   : HTTP response state            (provided in any case)
-    res      : Response object for responding (provided in any case)
-    message  : Message to be returned         (provided in any case)
-    user     : data of one user     (provided only in "READ"-Route)
-    username : name of the user     (provided only during login-accesses)
-  */
+    /*
+      status   : HTTP response state            (provided in any case)
+      res      : Response object for responding (provided in any case)
+      message  : Message to be returned         (provided in any case)
+      user     : data of one user     (provided only in "READ"-Route)
+      username : name of the user     (provided only during login-accesses)
+    */
 
-  //--- Variable declaration with detailed type of response -------------------
-  let response : { message  : string;
-                   userList : User[];
-                   user     : User;
-                   username : string };
+    //--- Variable declaration with detailed type of response -------------------
+    let response: {
+        message: string;
+        userList: User[];
+        user: User;
+        username: string
+    };
 
-  let query: string = 'SELECT id,time,username,vorname,nachname FROM userlist;';
-  connection.query(query, function (err: MysqlError | null, rows: any) {
-    if (err) { // database error -> set message, rows and status
-      message = "Database error: " + err.code;
-      rows    = [];
-      status  = 505;
-    }
-    response = { message  : message,
-                 userList : rows,
-                 user     : user,
-                 username : username  };
-    res.status(status);  // set HTTP response state, provided as parameter
-    res.json(response);  // send HTTP-response
-  });
+    let query: Object = {};
+    usermanDb.collection("userlist").find(query).toArray()
+        .then((users: User[]) => {
+            response = {
+                message: "Successful",
+                userList: users,
+                user: user,
+                username: username
+            }
+        })
+        .catch((error: MongoError) => {
+            console.log("Database error: " + error);
+            status = 505;
+            response = {
+                message: "Database error: " + error,
+                userList: [],
+                user: user,
+                username: username
+            }
+        })
+        .then(() => {
+            res.status(status);
+            res.json(response);
+        });
 
+/*
+    let query: string = 'SELECT id,time,username,vorname,nachname FROM userlist;';
+    connection.query(query, function (err: MysqlError | null, rows: any) {
+        if (err) { // database error -> set message, rows and status
+            message = "Database error: " + err.code;
+            rows = [];
+            status = 505;
+        }
+        response = {
+            message: message,
+            userList: rows,
+            user: user,
+            username: username
+        };
+        res.status(status);  // set HTTP response state, provided as parameter
+        res.json(response);  // send HTTP-response
+    });
+*/
 }
 
 /*****************************************************************************
  ***  Static routers                                                         *
  ****************************************************************************/
-router.use("/views",    express.static(__dirname + "/views"));
-router.use("/css",      express.static(__dirname + "/css"));
-router.use("/client",   express.static(__dirname + "/client"));
-router.use("/jquery",   express.static(__dirname + "/node_modules/jquery/dist"));
+router.use("/views", express.static(__dirname + "/views"));
+router.use("/css", express.static(__dirname + "/css"));
+router.use("/client", express.static(__dirname + "/client"));
+router.use("/jquery", express.static(__dirname + "/node_modules/jquery/dist"));
 router.use("/socketio", express.static(__dirname + "/node_modules/socket.io-client/dist"));
 
 /*****************************************************************************
  ***  Middleware Routers for Parsing, Session- and Rights-Management         *
  *****************************************************************************/
 //--- parsing json -----------------------------------------------------------
-router.use( bodyParser.json() );
+router.use(bodyParser.json());
 //--- session management -----------------------------------------------------
-router.use( session( {
-  // save session even if not modified
-  resave            : true,
-  // save session even if not used
-  saveUninitialized : true,
-  // forces cookie set on every response needed to set expiration (maxAge)
-  rolling           : true,
-  // name of the cookie set is set by the server
-  name              : "mySessionCookie",
-  // encrypt session-id in cookie using "secret" as modifier
-  secret            : "geheim",
-  // set some cookie-attributes. Here expiration-date (offset in ms)
-  cookie            : { maxAge: 10 * 60 * 1000 },
-} ) );
+router.use(session({
+    // save session even if not modified
+    resave: true,
+    // save session even if not used
+    saveUninitialized: true,
+    // forces cookie set on every response needed to set expiration (maxAge)
+    rolling: true,
+    // name of the cookie set is set by the server
+    name: "mySessionCookie",
+    // encrypt session-id in cookie using "secret" as modifier
+    secret: "geheim",
+    // set some cookie-attributes. Here expiration-date (offset in ms)
+    cookie: {maxAge: 10 * 60 * 1000},
+}));
 
 /*****************************************************************************
  ***  Dynamic Routers                                                        *
@@ -304,15 +338,17 @@ router.use( session( {
  * { "message"  : "user Musterfrau still logged in",
  *   "username" : "Musterfrau"                            }
  */
-router.get    ("/login/check", function (req: Request, res: Response) {
-	let message : string;
+router.get("/login/check", function (req: Request, res: Response) {
+    let message: string;
 
-	//--- check Rights -> RETURN if not sufficient ------------------------------
-	if (!checkRights(req,res, new Rights (true, false))) { return; }
+    //--- check Rights -> RETURN if not sufficient ------------------------------
+    if (!checkRights(req, res, new Rights(true, false))) {
+        return;
+    }
 
-	//--- ok -> set up message and send data ------------------------------------
-	message = "user still logged in";
-	sendData(200, res, message, null, req.session.username);
+    //--- ok -> set up message and send data ------------------------------------
+    message = "user still logged in";
+    sendData(200, res, message, null, req.session.username);
 
 });
 /**
@@ -327,42 +363,42 @@ router.get    ("/login/check", function (req: Request, res: Response) {
  * @apiExample {url} Usage Example
  * http://localhost:8080/login
  */
-router.post   ("/login",       function (req: Request, res: Response) {
-  let status   : number = 500;  // Initial HTTP response status
-  let message  : string = ""; // To be set
-  let username : string = req.body.username;
-  let password : string = req.body.password;
+router.post("/login", function (req: Request, res: Response) {
+    let status: number = 500;  // Initial HTTP response status
+    let message: string = ""; // To be set
+    let username: string = req.body.username;
+    let password: string = req.body.password;
 
-  //---- ok -> check username/password in database and set Rights -------------
-  if (username != "" && password != "") { // there must be username and password
-    let getData: [string, string] = [username, cryptoJS.MD5(password).toString()];
-    let query: string = 'SELECT * FROM userlist WHERE username = ? AND password = ?;';
-    connection.query(query, getData, function (err: MysqlError | null, rows: any) {
-      if (!err) { // database access successfull
-        if (rows.length === 1) { // only one dataset must be found -> rows[0]
-          message = username + " logged in by username/password";
-          req.session.username = username;    // set session-variable username
-          // set rights: here allways "admin" and "superadmin"
-          // can be extended with database-queries using rows.id
-          req.session.rights = new Rights(true, true);
-          status = 200;
-        } else { // username and passwort does not match
-          message = "Not Valid: user '" + username + "' does not match password";
-          status = 401;
-        }
-      } else { // database error
-        message = "Database error: " + err.code;
-        status = 505;
-      }
-      sendData(status, res, message, null, username);
-    });
-  }
-  //--- nok -------------------------------------------------------------------
-  else { // either username or password not provided
-    message = "Bad Request: not all mandatory parameters provided";
-    status = 400;
-    sendData(status, res, message, null, username);
-  }
+    //---- ok -> check username/password in database and set Rights -------------
+    if (username != "" && password != "") { // there must be username and password
+        let getData: [string, string] = [username, cryptoJS.MD5(password).toString()];
+        let query: string = 'SELECT * FROM userlist WHERE username = ? AND password = ?;';
+        connection.query(query, getData, function (err: MysqlError | null, rows: any) {
+            if (!err) { // database access successfull
+                if (rows.length === 1) { // only one dataset must be found -> rows[0]
+                    message = username + " logged in by username/password";
+                    req.session.username = username;    // set session-variable username
+                    // set rights: here allways "admin" and "superadmin"
+                    // can be extended with database-queries using rows.id
+                    req.session.rights = new Rights(true, true);
+                    status = 200;
+                } else { // username and passwort does not match
+                    message = "Not Valid: user '" + username + "' does not match password";
+                    status = 401;
+                }
+            } else { // database error
+                message = "Database error: " + err.code;
+                status = 505;
+            }
+            sendData(status, res, message, null, username);
+        });
+    }
+    //--- nok -------------------------------------------------------------------
+    else { // either username or password not provided
+        message = "Bad Request: not all mandatory parameters provided";
+        status = 400;
+        sendData(status, res, message, null, username);
+    }
 
 });
 /**
@@ -383,18 +419,20 @@ router.post   ("/login",       function (req: Request, res: Response) {
  * { "message"  : "Musterfrau logout successfull",
  *   "username" : "Musterfrau"                            }
  */
-router.post   ("/logout",      function (req: Request, res: Response) {
-  let message  : string;
+router.post("/logout", function (req: Request, res: Response) {
+    let message: string;
 
-  //--- check Rights -> RETURN if not sufficient ------------------------------
-  if (!checkRights(req,res, new Rights (true, false))) { return; }
+    //--- check Rights -> RETURN if not sufficient ------------------------------
+    if (!checkRights(req, res, new Rights(true, false))) {
+        return;
+    }
 
-  //--- ok -> delete session-variable and reset Rights ------------------------
-  let username : string = req.session.username;
-  req.session.username = null; // delete session-variable
-  req.session.rights   = null; // reset all Rights
-  message = username + " logout successfull";
-  sendData(200, res, message, null, username);
+    //--- ok -> delete session-variable and reset Rights ------------------------
+    let username: string = req.session.username;
+    req.session.username = null; // delete session-variable
+    req.session.rights = null; // reset all Rights
+    message = username + " logout successfull";
+    sendData(200, res, message, null, username);
 
 });
 
@@ -429,38 +467,40 @@ router.post   ("/logout",      function (req: Request, res: Response) {
  *
  * @apiUse BadRequest
  */
-router.post   ("/user",        function (req: Request, res: Response) {
-  let username : string = (req.body.username ? req.body.username : "").trim();
-  let password : string = (req.body.password ? req.body.password : "").trim();
-  let vorname  : string = (req.body.vorname  ? req.body.vorname  : "").trim();
-  let nachname : string = (req.body.nachname ? req.body.nachname : "").trim();
-  let message  : string = "";
-  let status   : number = 500; // Initial HTTP response status
+router.post("/user", function (req: Request, res: Response) {
+    let username: string = (req.body.username ? req.body.username : "").trim();
+    let password: string = (req.body.password ? req.body.password : "").trim();
+    let vorname: string = (req.body.vorname ? req.body.vorname : "").trim();
+    let nachname: string = (req.body.nachname ? req.body.nachname : "").trim();
+    let message: string = "";
+    let status: number = 500; // Initial HTTP response status
 
-  //--- check Rights -> RETURN if not sufficient ------------------------------
-  if (!checkRights(req, res, new Rights(true, false))) { return; }
+    //--- check Rights -> RETURN if not sufficient ------------------------------
+    if (!checkRights(req, res, new Rights(true, false))) {
+        return;
+    }
 
-  //-- ok -> insert user-data into database -----------------------------------
-  if ((username != "") && (vorname != "") && (nachname != "")) {
-    let insertData: [string, string, string, string, string] =
-      [new Date().toLocaleString(), username, cryptoJS.MD5(password).toString(), vorname, nachname];
-    let query: string = 'INSERT INTO userlist (time, username, password, vorname, nachname ) VALUES (?,?,?,?,?);';
-    connection.query(query, insertData, function (err: MysqlError | null) {
-      if (!err) { // database access successfull
-        message = "Created: " + vorname + " " + nachname;
-        status = 201;
-      } else { // database error
-        message = "Database error: " + err.code;
-        status = 505;
-      }
-      sendData(status, res, message, null, null);
-    });
-  }
-  //--- nok -------------------------------------------------------------------
-  else { // some parameters are not provided
-    message = "Bad Request: not all mandatory parameters provided";
-    sendData(400, res, message, null, null); // send message and all data
-  }
+    //-- ok -> insert user-data into database -----------------------------------
+    if ((username != "") && (vorname != "") && (nachname != "")) {
+        let insertData: [string, string, string, string, string] =
+            [new Date().toLocaleString(), username, cryptoJS.MD5(password).toString(), vorname, nachname];
+        let query: string = 'INSERT INTO userlist (time, username, password, vorname, nachname ) VALUES (?,?,?,?,?);';
+        connection.query(query, insertData, function (err: MysqlError | null) {
+            if (!err) { // database access successfull
+                message = "Created: " + vorname + " " + nachname;
+                status = 201;
+            } else { // database error
+                message = "Database error: " + err.code;
+                status = 505;
+            }
+            sendData(status, res, message, null, null);
+        });
+    }
+    //--- nok -------------------------------------------------------------------
+    else { // some parameters are not provided
+        message = "Bad Request: not all mandatory parameters provided";
+        sendData(400, res, message, null, null); // send message and all data
+    }
 
 });
 /**
@@ -495,47 +535,49 @@ router.post   ("/user",        function (req: Request, res: Response) {
  * @apiUse NotFound
  * @apiUse Gone
  */
-router.get    ("/user/:id",    function (req: Request, res: Response) {
-  let status   : number = 500; // Initial HTTP response status
-  let message  : string = "";  // To be set
-  let id       : number = (req.params.id != "" ? req.params.id: -1);
+router.get("/user/:id", function (req: Request, res: Response) {
+    let status: number = 500; // Initial HTTP response status
+    let message: string = "";  // To be set
+    let id: number = (req.params.id != "" ? req.params.id : -1);
 
-  //--- check Rights -> RETURN if not sufficient ------------------------------
-  if (!checkRights(req,res, new Rights (true, false))) { return; }
-
-  //--- ok -> get user from database ------------------------------------------
-  if (!isNaN(id) && id >= 0) { // id must be provided and valid
-    let getData: [number] = [id];
-    let query: string = 'SELECT * FROM userlist WHERE id = ?;';
-    connection.query(query, getData, function (err: MysqlError | null, rows: any) {
-      let user: User = null;  // initialize user with null
-      if (!err) { // database access successfull
-        if (rows.length === 1) { // only one dataset must be found -> rows[0]
-          user = new User(rows[0].id, rows[0].time, rows[0].username, rows[0].vorname, rows[0].nachname);
-          message = "Selected item is " + user.vorname + " " + user.nachname;
-          status = 200;
-        } else { // no user found with provided id
-          message = "Id " + id + " not found";
-          status = 404;
-        }
-      } else { // database error
-        message = "Database error: " + err.code;
-        status = 505;
-      }
-      sendData(status, res, message, user, null);
-    });
-  }
-  //--- nok -------------------------------------------------------------------
-  else {
-    if (id == -1) { // id is not provided
-      message = "Id not provided";
-      status = 400;
-    } else { // id is not valid, e.g. not a number
-      message = "Id " + id + " not valid";
-      status = 500;
+    //--- check Rights -> RETURN if not sufficient ------------------------------
+    if (!checkRights(req, res, new Rights(true, false))) {
+        return;
     }
-    sendData(status, res, message, null, null);
-  }
+
+    //--- ok -> get user from database ------------------------------------------
+    if (!isNaN(id) && id >= 0) { // id must be provided and valid
+        let getData: [number] = [id];
+        let query: string = 'SELECT * FROM userlist WHERE id = ?;';
+        connection.query(query, getData, function (err: MysqlError | null, rows: any) {
+            let user: User = null;  // initialize user with null
+            if (!err) { // database access successfull
+                if (rows.length === 1) { // only one dataset must be found -> rows[0]
+                    user = new User(rows[0].id, rows[0].time, rows[0].username, rows[0].vorname, rows[0].nachname);
+                    message = "Selected item is " + user.vorname + " " + user.nachname;
+                    status = 200;
+                } else { // no user found with provided id
+                    message = "Id " + id + " not found";
+                    status = 404;
+                }
+            } else { // database error
+                message = "Database error: " + err.code;
+                status = 505;
+            }
+            sendData(status, res, message, user, null);
+        });
+    }
+    //--- nok -------------------------------------------------------------------
+    else {
+        if (id == -1) { // id is not provided
+            message = "Id not provided";
+            status = 400;
+        } else { // id is not valid, e.g. not a number
+            message = "Id " + id + " not valid";
+            status = 500;
+        }
+        sendData(status, res, message, null, null);
+    }
 
 });
 /**
@@ -576,57 +618,59 @@ router.get    ("/user/:id",    function (req: Request, res: Response) {
  * @apiUse NotFound
  * @apiUse Gone
  */
-router.put    ("/user/:id",    function (req: Request, res: Response) {
-  let status      : number = 500; // Initial HTTP response status
-  let message     : string = ""; // To be set
-  let updateData; // No type provided - depends on existence of password
-  let query       : string = "";
+router.put("/user/:id", function (req: Request, res: Response) {
+    let status: number = 500; // Initial HTTP response status
+    let message: string = ""; // To be set
+    let updateData; // No type provided - depends on existence of password
+    let query: string = "";
 
-  //--- check Rights -> RETURN if not sufficient ------------------------------
-  if (!checkRights(req,res, new Rights (true, false))) { return; }
-
-  //--- check if parameters exists -> initialize each if not ------------------
-  let id       : number = (req.params.id     ? req.params.id     : -1);
-  let vorname  : string = (req.body.vorname  ? req.body.vorname  : "").trim();
-  let nachname : string = (req.body.nachname ? req.body.nachname : "").trim();
-  let password : string = (req.body.password ? req.body.password : "").trim();
-
-  //--- ok -> update user with new attributes ---------------------------------
-  if (!isNaN(id) && id >= 0) { // id must be provided and valid
-    if (password == "") { // no new password set
-      updateData = [vorname, nachname, id];
-      query = 'UPDATE userlist SET vorname = ?, nachname = ? WHERE id = ?;';
-    } else { // new password set
-      updateData = [cryptoJS.MD5(password).toString(), vorname, nachname, id];
-      query = 'UPDATE userlist SET password = ?, vorname = ?, nachname = ? WHERE id = ?;';
+    //--- check Rights -> RETURN if not sufficient ------------------------------
+    if (!checkRights(req, res, new Rights(true, false))) {
+        return;
     }
-    connection.query(query, updateData, function (err: MysqlError | null, rows: any) {
-      if (!err) { // database access successfull
-        if (rows.affectedRows === 1) {  // only one dataset must be affected
-          message = vorname + " " + nachname + " successfully updated";
-          status = 201;
-        } else { // no user found with provided id
-          message = "Not Valid: Id " + id + " not valid";
-          status = 500;
+
+    //--- check if parameters exists -> initialize each if not ------------------
+    let id: number = (req.params.id ? req.params.id : -1);
+    let vorname: string = (req.body.vorname ? req.body.vorname : "").trim();
+    let nachname: string = (req.body.nachname ? req.body.nachname : "").trim();
+    let password: string = (req.body.password ? req.body.password : "").trim();
+
+    //--- ok -> update user with new attributes ---------------------------------
+    if (!isNaN(id) && id >= 0) { // id must be provided and valid
+        if (password == "") { // no new password set
+            updateData = [vorname, nachname, id];
+            query = 'UPDATE userlist SET vorname = ?, nachname = ? WHERE id = ?;';
+        } else { // new password set
+            updateData = [cryptoJS.MD5(password).toString(), vorname, nachname, id];
+            query = 'UPDATE userlist SET password = ?, vorname = ?, nachname = ? WHERE id = ?;';
         }
-      } else { // database error
-        message = "Database error: " + err.code;
-        status = 505;
-      }
-      sendData(status, res, message, null, null);
-    });
-  }
-  //--- nok -------------------------------------------------------------------
-  else {
-    if (id == -1) { // Id is not provided in URL
-      message = "Id not provided";
-      status = 400;
-    } else { // id is not valid, e.g. not a number
-        message = "Id " + id + " not valid";
-        status = 500;
+        connection.query(query, updateData, function (err: MysqlError | null, rows: any) {
+            if (!err) { // database access successfull
+                if (rows.affectedRows === 1) {  // only one dataset must be affected
+                    message = vorname + " " + nachname + " successfully updated";
+                    status = 201;
+                } else { // no user found with provided id
+                    message = "Not Valid: Id " + id + " not valid";
+                    status = 500;
+                }
+            } else { // database error
+                message = "Database error: " + err.code;
+                status = 505;
+            }
+            sendData(status, res, message, null, null);
+        });
     }
-    sendData(status, res, message, null, null);
-  }
+    //--- nok -------------------------------------------------------------------
+    else {
+        if (id == -1) { // Id is not provided in URL
+            message = "Id not provided";
+            status = 400;
+        } else { // id is not valid, e.g. not a number
+            message = "Id " + id + " not valid";
+            status = 500;
+        }
+        sendData(status, res, message, null, null);
+    }
 
 });
 /**
@@ -660,47 +704,49 @@ router.put    ("/user/:id",    function (req: Request, res: Response) {
  * @apiUse Gone
  * @apiUse Forbidden
  */
-router.delete ("/user/:id",    function (req: Request, res: Response) {
-  let status    : number = 500; // Initial HTTP response status
-  let message   : string = "";  // To be set
-  let id        : number = (req.body.id != "" ? req.params.id: -1);
+router.delete("/user/:id", function (req: Request, res: Response) {
+    let status: number = 500; // Initial HTTP response status
+    let message: string = "";  // To be set
+    let id: number = (req.body.id != "" ? req.params.id : -1);
 
-  //--- check Rights -> RETURN if not sufficient ------------------------------
-  if (!checkRights(req,res, new Rights (true, false))) { return; }
-
-  //--- ok -> delete user from database ---------------------------------------
-  if (!isNaN(id) && id > 1) { // user with id=1 (admin) must not be deleted
-    let deleteData: [number] = [id];
-    let query: string = 'DELETE FROM userlist WHERE id = ?;';
-    connection.query(query, deleteData, function (err: MysqlError | null, rows: any) {
-      if (!err) { // database access successfull
-        if (rows.affectedRows > 0) { // only one dataset must be affected
-          message = "ID " + id + " successfully deleted";
-          status = 200;
-        } else { // no user found with provided id
-          message = "Id " + id + " not found";
-          status = 404;
-        }
-      } else { // database error
-        message = "Database error: " + err.code;
-        status = 505;
-      }
-      sendData(status, res, message, null, null);
-    });
-  }
-  //--- nok -------------------------------------------------------------------
-  else {
-    if (id == 1 ) { // user with id=1 is admin and must not be deleted
-      message = "Admin can not be deleted";
-      status = 403;
-    } else if (id == -1) { // Id is not provided in URL
-      message = "Id not provided";
-      status = 400;
-    } else { // id is not valid, e.g. not a number
-      message = "Id " + id + " not valid";
-      status = 500;
+    //--- check Rights -> RETURN if not sufficient ------------------------------
+    if (!checkRights(req, res, new Rights(true, false))) {
+        return;
     }
-    sendData(status, res, message, null, null);
-  }
+
+    //--- ok -> delete user from database ---------------------------------------
+    if (!isNaN(id) && id > 1) { // user with id=1 (admin) must not be deleted
+        let deleteData: [number] = [id];
+        let query: string = 'DELETE FROM userlist WHERE id = ?;';
+        connection.query(query, deleteData, function (err: MysqlError | null, rows: any) {
+            if (!err) { // database access successfull
+                if (rows.affectedRows > 0) { // only one dataset must be affected
+                    message = "ID " + id + " successfully deleted";
+                    status = 200;
+                } else { // no user found with provided id
+                    message = "Id " + id + " not found";
+                    status = 404;
+                }
+            } else { // database error
+                message = "Database error: " + err.code;
+                status = 505;
+            }
+            sendData(status, res, message, null, null);
+        });
+    }
+    //--- nok -------------------------------------------------------------------
+    else {
+        if (id == 1) { // user with id=1 is admin and must not be deleted
+            message = "Admin can not be deleted";
+            status = 403;
+        } else if (id == -1) { // Id is not provided in URL
+            message = "Id not provided";
+            status = 400;
+        } else { // id is not valid, e.g. not a number
+            message = "Id " + id + " not valid";
+            status = 500;
+        }
+        sendData(status, res, message, null, null);
+    }
 
 });
