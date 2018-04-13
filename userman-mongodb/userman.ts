@@ -9,14 +9,22 @@ import * as db from "mysql";           // mysql database
 import * as socket from "socket.io";
 
 import {Request, Response} from "express";
-import {Db, MongoClient, MongoError} from "mongodb";
+import {
+    Db,
+    DeleteWriteOpResultObject,
+    InsertOneWriteOpResult,
+    MongoClient,
+    MongoError,
+    UpdateWriteOpResult
+} from "mongodb";
+import {ObjectID} from "bson";
 // import {Connection, MysqlError} from "mysql";
 
 /*****************************************************************************
  ***  setup database and its structure                                       *
  *****************************************************************************/
 //---- Object with connection parameters --------------------------------------
-let usermanDb:Db;
+let usermanDb: Db;
 
 MongoClient.connect("mongodb://localhost:27017").then((dbClient: MongoClient) => {
     usermanDb = dbClient.db("userman");
@@ -32,13 +40,15 @@ class User {
     username: string;
     vorname: string;
     nachname: string;
+    password: string;
 
-    constructor(id: number, time: string, username: string, vorname: string, nachname: string) {
+    constructor(id: number, time: string, username: string, vorname: string, nachname: string, password: string) {
         this.id = id;
         this.time = time;
         this.username = username;
         this.vorname = vorname;
         this.nachname = nachname;
+        this.password = password;
     }
 }
 
@@ -194,27 +204,29 @@ function sendData(status: number, res: Response,
         })
         .then(() => {
             res.status(status);
-            res.json(response);
+            res.send(response);
         });
+    // ToDo: Send response in any case (finally?)
 
-/*
-    let query: string = 'SELECT id,time,username,vorname,nachname FROM userlist;';
-    connection.query(query, function (err: MysqlError | null, rows: any) {
-        if (err) { // database error -> set message, rows and status
-            message = "Database error: " + err.code;
-            rows = [];
-            status = 505;
-        }
-        response = {
-            message: message,
-            userList: rows,
-            user: user,
-            username: username
-        };
-        res.status(status);  // set HTTP response state, provided as parameter
-        res.json(response);  // send HTTP-response
-    });
-*/
+
+    /*
+        let query: string = 'SELECT id,time,username,vorname,nachname FROM userlist;';
+        connection.query(query, function (err: MysqlError | null, rows: any) {
+            if (err) { // database error -> set message, rows and status
+                message = "Database error: " + err.code;
+                rows = [];
+                status = 505;
+            }
+            response = {
+                message: message,
+                userList: rows,
+                user: user,
+                username: username
+            };
+            res.status(status);  // set HTTP response state, provided as parameter
+            res.json(response);  // send HTTP-response
+        });
+    */
 }
 
 /*****************************************************************************
@@ -371,6 +383,32 @@ router.post("/login", function (req: Request, res: Response) {
 
     //---- ok -> check username/password in database and set Rights -------------
     if (username != "" && password != "") { // there must be username and password
+        let query: Object = {
+            username: username,
+            password: cryptoJS.MD5(password).toString()
+        };
+        usermanDb.collection("userlist").find(query).toArray()
+            .then((users: User[]) => {
+                if (users.length === 1) {
+                    message = username + " logged in by username/password";
+                    req.session.username = username;
+                    req.session.rights = new Rights(true, true);
+                    status = 200;
+                } else {
+                    message = "Not valid: user '" + username + "' does not match password";
+                    status = 401;
+                }
+            })
+            .catch((error: MongoError) => {
+                message = "Database error: " + error;
+                status = 505;
+            })
+            .then(() => {
+                sendData(status, res, message, null, username);
+            });
+        // ToDo: Check
+
+        /*
         let getData: [string, string] = [username, cryptoJS.MD5(password).toString()];
         let query: string = 'SELECT * FROM userlist WHERE username = ? AND password = ?;';
         connection.query(query, getData, function (err: MysqlError | null, rows: any) {
@@ -392,6 +430,7 @@ router.post("/login", function (req: Request, res: Response) {
             }
             sendData(status, res, message, null, username);
         });
+        */
     }
     //--- nok -------------------------------------------------------------------
     else { // either username or password not provided
@@ -482,6 +521,33 @@ router.post("/user", function (req: Request, res: Response) {
 
     //-- ok -> insert user-data into database -----------------------------------
     if ((username != "") && (vorname != "") && (nachname != "")) {
+        let user: User = new User(null,
+            new Date().toLocaleString(),
+            username,
+            vorname,
+            nachname,
+            cryptoJS.MD5(password).toString());
+        usermanDb.collection("userlist").insertOne(user)
+            .then((result: InsertOneWriteOpResult) => {
+                if (result.insertedCount === 1) {
+                    message = "Created";
+                    status = 201;
+                } else {
+                    message = "Database error: How do I even got here";
+                    status = 505;
+                }
+            })
+            .catch((error: MongoError) => {
+                message = "Database error: " + error;
+                status = 505;
+            })
+            .then(() => {
+                sendData(status, res, message, null, null);
+            });
+        // ToDo: Check
+
+
+        /*
         let insertData: [string, string, string, string, string] =
             [new Date().toLocaleString(), username, cryptoJS.MD5(password).toString(), vorname, nachname];
         let query: string = 'INSERT INTO userlist (time, username, password, vorname, nachname ) VALUES (?,?,?,?,?);';
@@ -495,6 +561,7 @@ router.post("/user", function (req: Request, res: Response) {
             }
             sendData(status, res, message, null, null);
         });
+        */
     }
     //--- nok -------------------------------------------------------------------
     else { // some parameters are not provided
@@ -539,6 +606,7 @@ router.get("/user/:id", function (req: Request, res: Response) {
     let status: number = 500; // Initial HTTP response status
     let message: string = "";  // To be set
     let id: number = (req.params.id != "" ? req.params.id : -1);
+    let requestedUser: User = null;
 
     //--- check Rights -> RETURN if not sufficient ------------------------------
     if (!checkRights(req, res, new Rights(true, false))) {
@@ -547,6 +615,30 @@ router.get("/user/:id", function (req: Request, res: Response) {
 
     //--- ok -> get user from database ------------------------------------------
     if (!isNaN(id) && id >= 0) { // id must be provided and valid
+        let query: Object = {
+            _id: id
+        };
+        usermanDb.collection("userlist").findOne(query)
+            .then((user: User) => {
+                if (user != null) {
+                    requestedUser = user;
+                    message = "Selected item is " + user.vorname + " " + user.nachname;
+                    status = 200;
+                } else {
+                    message = "Id " + id + " not found";
+                    status = 404;
+                }
+            })
+            .catch((error: MongoError) => {
+                message = "Database error: " + error;
+                status = 505;
+            })
+            .then(() => {
+                sendData(status, res, message, requestedUser, null);
+            });
+        // ToDo: Check
+
+        /*
         let getData: [number] = [id];
         let query: string = 'SELECT * FROM userlist WHERE id = ?;';
         connection.query(query, getData, function (err: MysqlError | null, rows: any) {
@@ -566,6 +658,7 @@ router.get("/user/:id", function (req: Request, res: Response) {
             }
             sendData(status, res, message, user, null);
         });
+        */
     }
     //--- nok -------------------------------------------------------------------
     else {
@@ -621,8 +714,8 @@ router.get("/user/:id", function (req: Request, res: Response) {
 router.put("/user/:id", function (req: Request, res: Response) {
     let status: number = 500; // Initial HTTP response status
     let message: string = ""; // To be set
-    let updateData; // No type provided - depends on existence of password
-    let query: string = "";
+    let query: Object = null;
+    let updateData: Object
 
     //--- check Rights -> RETURN if not sufficient ------------------------------
     if (!checkRights(req, res, new Rights(true, false))) {
@@ -637,6 +730,42 @@ router.put("/user/:id", function (req: Request, res: Response) {
 
     //--- ok -> update user with new attributes ---------------------------------
     if (!isNaN(id) && id >= 0) { // id must be provided and valid
+        query = {
+            _id: new ObjectID(id)
+        };
+
+        if (password === "") {
+            updateData = {
+                vorname: vorname,
+                nachname: nachname
+            };
+        } else {
+            updateData = {
+                vorname: vorname,
+                nachname: nachname,
+                password: password
+            };
+        }
+        usermanDb.collection("userlis").updateOne(query, {$set: updateData})
+            .then((result: UpdateWriteOpResult) => {
+                if (result.matchedCount === 1) {
+                    message = "Successfuly updated";
+                    status = 201;
+                } else {
+                    message = "Not valid: id " + id + " not valid";
+                    status = 500;
+                }
+            })
+            .catch((error: MongoError) => {
+                message = "Database error: " + error;
+                status = 505;
+            })
+            .then(() => {
+                sendData(status, res, message, null, null);
+            });
+        // ToDo: Check
+
+        /*
         if (password == "") { // no new password set
             updateData = [vorname, nachname, id];
             query = 'UPDATE userlist SET vorname = ?, nachname = ? WHERE id = ?;';
@@ -659,6 +788,7 @@ router.put("/user/:id", function (req: Request, res: Response) {
             }
             sendData(status, res, message, null, null);
         });
+        */
     }
     //--- nok -------------------------------------------------------------------
     else {
@@ -716,6 +846,30 @@ router.delete("/user/:id", function (req: Request, res: Response) {
 
     //--- ok -> delete user from database ---------------------------------------
     if (!isNaN(id) && id > 1) { // user with id=1 (admin) must not be deleted
+        let query: Object = {
+            _id: new ObjectID(id)
+        };
+
+        usermanDb.collection("userlist").deleteOne(query)
+            .then((result: DeleteWriteOpResultObject) => {
+                if (result.deletedCount === 1) {
+                    message = "Id " + id + " sucessfully deleted";
+                    status = 200;
+                } else {
+                    message = "Id " + id + " not found";
+                    status = 404;
+                }
+            })
+            .catch((error: MongoError) => {
+                message = "Database error: " + error;
+                status = 505;
+            })
+            .then(() => {
+                sendData(status, res, message, null, null);
+            });
+        // Todo: Check
+
+        /*
         let deleteData: [number] = [id];
         let query: string = 'DELETE FROM userlist WHERE id = ?;';
         connection.query(query, deleteData, function (err: MysqlError | null, rows: any) {
@@ -733,6 +887,7 @@ router.delete("/user/:id", function (req: Request, res: Response) {
             }
             sendData(status, res, message, null, null);
         });
+        */
     }
     //--- nok -------------------------------------------------------------------
     else {
