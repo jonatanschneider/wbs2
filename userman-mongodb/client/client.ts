@@ -13,7 +13,7 @@ let   username  : string = "";  // holding username of user logged in
  *** User: class that represents all data that represents a user in the userList                                      *
  **********************************************************************************************************************/
 class User {
-	id: number;
+	_id: number;
 	username: string;
 	vorname: string;
 	nachname: string;
@@ -323,7 +323,7 @@ function renderList(userList: User[]) {
 		if (user != null) { // only if user has not been deleted
 
 			// set up html-code and create li-Element
-			buffer = "<li userid='" + user.id + "'>";
+			buffer = "<li userid='" + user._id + "'>";
 			buffer += "  <div class='w3-tiny'>";
 			buffer += "    <span class='user'>" + user.username + "</span>";
 			buffer += "    <span class='lock fa fa-lock hide'/>";
@@ -331,7 +331,7 @@ function renderList(userList: User[]) {
 			buffer += "  <div>";
 			buffer += "    <span class='vornameText'>" + user.vorname + "</span>";
 			buffer += "    <span class='nachnameText'>" + user.nachname + "</span>";
-			buffer += "    <span class='fa fa-trash w3-large w3-margin-right' userid='" + user.id + "'/>";
+			buffer += "    <span class='fa fa-trash w3-large w3-margin-right' userid='" + user._id + "'/>";
 			buffer += "  </div>";
 			buffer += "  <div class='w3-tiny'>" + user.time + "</div>";
 			buffer += "</li>";
