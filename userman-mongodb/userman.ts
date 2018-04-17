@@ -165,7 +165,7 @@ function checkRights(req: Request, res: Response, rights: Rights): boolean {
  *****************************************************************************/
 function sendData(status: number, res: Response,
 				  message: string, user: User, username: string) {
-	/*
+	/**
 	  status   : HTTP response state            (provided in any case)
 	  res      : Response object for responding (provided in any case)
 	  message  : Message to be returned         (provided in any case)
@@ -205,27 +205,6 @@ function sendData(status: number, res: Response,
 			res.status(status);
 			res.send(response);
 		});
-	// ToDo: Send response in any case (finally?)
-
-
-	/*
-		let query: string = 'SELECT _id,time,username,vorname,nachname FROM userlist;';
-		connection.query(query, function (err: MysqlError | null, rows: any) {
-			if (err) { // database error -> set message, rows and status
-				message = "Database error: " + err.code;
-				rows = [];
-				status = 505;
-			}
-			response = {
-				message: message,
-				userList: rows,
-				user: user,
-				username: username
-			};
-			res.status(status);  // set HTTP response state, provided as parameter
-			res.json(response);  // send HTTP-response
-		});
-	*/
 }
 
 /*****************************************************************************
@@ -360,7 +339,6 @@ router.get('/login/check', function (req: Request, res: Response) {
 	//--- ok -> set up message and send data ------------------------------------
 	message = 'user still logged in';
 	sendData(200, res, message, null, req.session.username);
-
 });
 /**
  * --- login with: post /login -----------------------------------------
@@ -405,31 +383,6 @@ router.post('/login', function (req: Request, res: Response) {
 			.then(() => {
 				sendData(status, res, message, null, username);
 			});
-		// ToDo: Check
-
-		/*
-		let getData: [string, string] = [username, cryptoJS.MD5(password).toString()];
-		let query: string = 'SELECT * FROM userlist WHERE username = ? AND password = ?;';
-		connection.query(query, getData, function (err: MysqlError | null, rows: any) {
-			if (!err) { // database access successfull
-				if (rows.length === 1) { // only one dataset must be found -> rows[0]
-					message = username + " logged in by username/password";
-					req.session.username = username;    // set session-variable username
-					// set rights: here allways "admin" and "superadmin"
-					// can be extended with database-queries using rows._id
-					req.session.rights = new Rights(true, true);
-					status = 200;
-				} else { // username and passwort does not match
-					message = "Not Valid: user '" + username + "' does not match password";
-					status = 401;
-				}
-			} else { // database error
-				message = "Database error: " + err.code;
-				status = 505;
-			}
-			sendData(status, res, message, null, username);
-		});
-		*/
 	}
 	//--- nok -------------------------------------------------------------------
 	else { // either username or password not provided
@@ -437,7 +390,6 @@ router.post('/login', function (req: Request, res: Response) {
 		status = 400;
 		sendData(status, res, message, null, username);
 	}
-
 });
 /**
  * --- logout with: post /logout ---------------------------------------
@@ -543,31 +495,12 @@ router.post('/user', function (req: Request, res: Response) {
 			.then(() => {
 				sendData(status, res, message, null, null);
 			});
-		// ToDo: Check
-
-
-		/*
-		let insertData: [string, string, string, string, string] =
-			[new Date().toLocaleString(), username, cryptoJS.MD5(password).toString(), vorname, nachname];
-		let query: string = 'INSERT INTO userlist (time, username, password, vorname, nachname ) VALUES (?,?,?,?,?);';
-		connection.query(query, insertData, function (err: MysqlError | null) {
-			if (!err) { // database access successfull
-				message = "Created: " + vorname + " " + nachname;
-				status = 201;
-			} else { // database error
-				message = "Database error: " + err.code;
-				status = 505;
-			}
-			sendData(status, res, message, null, null);
-		});
-		*/
 	}
 	//--- nok -------------------------------------------------------------------
 	else { // some parameters are not provided
 		message = 'Bad Request: not all mandatory parameters provided';
 		sendData(400, res, message, null, null); // send message and all data
 	}
-
 });
 /**
  * --- get user with /user/:_id -----------------------------------------
@@ -633,29 +566,6 @@ router.get('/user/:_id', function (req: Request, res: Response) {
 			.then(() => {
 				sendData(status, res, message, requestedUser, null);
 			});
-		// ToDo: Check
-
-		/*
-		let getData: [number] = [_id];
-		let query: string = 'SELECT * FROM userlist WHERE _id = ?;';
-		connection.query(query, getData, function (err: MysqlError | null, rows: any) {
-			let user: User = null;  // initialize user with null
-			if (!err) { // database access successfull
-				if (rows.length === 1) { // only one dataset must be found -> rows[0]
-					user = new User(rows[0]._id, rows[0].time, rows[0].username, rows[0].vorname, rows[0].nachname);
-					message = "Selected item is " + user.vorname + " " + user.nachname;
-					status = 200;
-				} else { // no user found with provided _id
-					message = "Id " + _id + " not found";
-					status = 404;
-				}
-			} else { // database error
-				message = "Database error: " + err.code;
-				status = 505;
-			}
-			sendData(status, res, message, user, null);
-		});
-		*/
 	}
 	//--- nok -------------------------------------------------------------------
 	else {// _id is not valid, e.g. not a number
@@ -663,7 +573,6 @@ router.get('/user/:_id', function (req: Request, res: Response) {
 		status = 500;
 		sendData(status, res, message, null, null);
 	}
-
 });
 /**
  * --- update user with: put /user/:_id ---------------------------------
@@ -755,32 +664,6 @@ router.put('/user/:_id', function (req: Request, res: Response) {
 			.then(() => {
 				sendData(status, res, message, null, null);
 			});
-		// ToDo: Check
-
-		/*
-		if (password == "") { // no new password set
-			updateData = [vorname, nachname, _id];
-			query = 'UPDATE userlist SET vorname = ?, nachname = ? WHERE _id = ?;';
-		} else { // new password set
-			updateData = [cryptoJS.MD5(password).toString(), vorname, nachname, _id];
-			query = 'UPDATE userlist SET password = ?, vorname = ?, nachname = ? WHERE _id = ?;';
-		}
-		connection.query(query, updateData, function (err: MysqlError | null, rows: any) {
-			if (!err) { // database access successfull
-				if (rows.affectedRows === 1) {  // only one dataset must be affected
-					message = vorname + " " + nachname + " successfully updated";
-					status = 201;
-				} else { // no user found with provided _id
-					message = "Not Valid: Id " + _id + " not valid";
-					status = 500;
-				}
-			} else { // database error
-				message = "Database error: " + err.code;
-				status = 505;
-			}
-			sendData(status, res, message, null, null);
-		});
-		*/
 	}
 	//--- nok -------------------------------------------------------------------
 	else {// _id is not valid, e.g. not a number
@@ -788,7 +671,6 @@ router.put('/user/:_id', function (req: Request, res: Response) {
 		status = 500;
 		sendData(status, res, message, null, null);
 	}
-
 });
 /**
  * --- delete user with /user/:_id --------------------------------------
@@ -854,27 +736,6 @@ router.delete('/user/:_id', function (req: Request, res: Response) {
 			.then(() => {
 				sendData(status, res, message, null, null);
 			});
-		// Todo: Check
-
-		/*
-		let deleteData: [number] = [_id];
-		let query: string = 'DELETE FROM userlist WHERE _id = ?;';
-		connection.query(query, deleteData, function (err: MysqlError | null, rows: any) {
-			if (!err) { // database access successfull
-				if (rows.affectedRows > 0) { // only one dataset must be affected
-					message = "ID " + _id + " successfully deleted";
-					status = 200;
-				} else { // no user found with provided _id
-					message = "Id " + _id + " not found";
-					status = 404;
-				}
-			} else { // database error
-				message = "Database error: " + err.code;
-				status = 505;
-			}
-			sendData(status, res, message, null, null);
-		});
-		*/
 	}
 	//--- nok -------------------------------------------------------------------
 	else {// _id is not valid, e.g. not a number
@@ -882,5 +743,4 @@ router.delete('/user/:_id', function (req: Request, res: Response) {
 		status = 500;
 		sendData(status, res, message, null, null);
 	}
-
 });
