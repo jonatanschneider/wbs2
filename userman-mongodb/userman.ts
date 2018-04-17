@@ -735,7 +735,7 @@ router.put('/user/:_id', function (req: Request, res: Response) {
 			updateData = {
 				vorname: vorname,
 				nachname: nachname,
-				password: password
+				password: cryptoJS.MD5(password).toString()
 			};
 		}
 		users.updateOne(query, {$set: updateData})
