@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>userman ALL</title>
+  <link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <!-- unset webStorm-preference: Editor -> inspections -> HTML -> File reference problems  -->
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.js"></script> -->
+  <script language="javascript" type="text/javascript" src="/socketio/socket.io.js"></script>
+  <script language="javascript" type="text/javascript" src="/jquery/jquery.min.js"></script>
+  <script language="javascript" type="text/javascript" src="/client/client.js"></script>
+</head>
+
+<body>
+
+
+<!-- *******************************************************************************************************************
+* Non modal                                                                                                            *
+******************************************************************************************************************** -->
+
+<!-- Header ----------------------------------------------------------------------------------------------------------->
+<div id="headArea" class="w3-display-container w3-lime" style="height:40px;">
+  <div id="title"       class="w3-display-middle w3-xlarge">userMan</div>
+  <div id="settingsBtn" class="w3-display-right  w3-button w3-cell w3-lime fa fa-cog w3-right"></div>
+</div>
+
+<!-- Login / Logout --------------------------------------------------------------------------------------------------->
+<div id="loginArea" class="w3-container">
+  <div id="login">
+    <div class="w3-cell w3-left" style="width:80%">
+      <div class="w3-cell">
+        <input  id="userIn"     class="w3-input w3-border"                type="text"     placeholder="Benutzername">
+      </div>
+      <div class="w3-cell">
+        <input  id="passwordIn" class="w3-input w3-border w3-margin-left" type="password" placeholder="Password"    >
+      </div>
+    </div>
+    <div class="w3-cell w3-right">
+      <button id="loginBtn" class="w3-btn w3-margin-left w3-teal fa fa-sign-in "></button>
+    </div>
+  </div>
+  <div id="logout" style="display:none">  <!-- can not use w3-hide, because jQuery.show() does not work -->
+    <div class="w3-cell w3-left" style="width:70%">
+      <span id="username"></span>
+    </div>
+    <div class="w3-cell w3-right">
+      <button id="logoutBtn" class="w3-btn w3-border w3-teal fa fa-sign-out" type="submit"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Content Area: user dialog /filter / userList / pagination -------------------------------------------------------->
+<div id="contentArea">
+  <!-- add user dialog ----------------------------------------------------->
+  <div id="addUser"    class="w3-container">
+    <div class="w3-left" style="width:80%">
+      <div class="w3-cell">
+        <input  id="usernameInput"  class="w3-input"                   type="text" placeholder="User">
+      </div>
+      <div class="w3-cell">
+        <input  id="passwordInput" class="w3-input w3-margin-left" type="password" placeholder="Password">
+      </div>
+    </div>
+    <div class="w3-left" style="width:80%">
+      <div class="w3-cell">
+        <input  id="vornameInput"  class="w3-input"                type="text" placeholder="Vorname">
+      </div>
+      <div class="w3-cell">
+        <input  id="nachnameInput" class="w3-input w3-margin-left" type="text" placeholder="Nachname">
+      </div>
+    </div>
+    <div class="w3-cell w3-right ">
+      <button id="addUserButton"   class="fa fa-plus w3-btn   w3-margin-left w3-gray "></button>
+    </div>
+  </div>
+  <!-- filter field -------------------------------------------------------->
+  <div id="filter"     class="w3-container">
+    <input id="userFilter" class="w3-input w3-border" type="text" placeholder="Filter ..."/>
+  </div>
+  <!-- user table ---------------------------------------------------------->
+  <div id="userList"   class="w3-container">
+    <ul id="userUL" class="w3-ul w3-card-4"></ul>
+  </div>
+</div>
+
+
+<!-- *******************************************************************************************************************
+* Modal windows                                                                                                        *
+******************************************************************************************************************** -->
+
+<!-- Edit-Dialog (modal window)  -------------------------------------------------------------------------------------->
+<div id="editWindow"     class="w3-modal">
+  <div class="w3-modal-content w3-animate-zoom" style="max-width:400px">
+    <!-- Cancel button ----------------------------------------------------->
+    <div id="editCancelBtn" class="w3-button w3-light-gray w3-hover-red w3-display-topright"> &times; </div>
+    <!-- Title ------------------------------------------------------------->
+    <div id="editTitle"     class="w3-container w3-center w3-xlarge"> User Title </div>
+    <!-- Input-Felder ------------------------------------------------------>
+    <div id="editUserForm"  class="w3-container">
+      <div class="w3-section">
+        <label><b>Vorname</b></label>
+        <input id="editVorname"  class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Vorname">
+        <label><b>Nachname</b></label>
+        <input id="editNachname" class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Nachname">
+        <label><b>Passwort</b></label>
+        <input id="editPassword" class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Optional: Neues Passwort">
+      </div>
+    </div>
+    <!-- Save button ------------------------------------------------------->
+    <div id="editSaveBtn"   class="w3-container w3-padding-16">
+      <div class="w3-block w3-btn w3-teal w3-ripple"> save </div>
+    </div>
+  </div>
+</div>
+
+<!-- Results of requests (modal window) ------------------------------------------------------------------------------->
+<div id="resultWindow"   class="w3-modal">
+  <div id="result" class="w3-modal-content w3-container">
+  </div>
+</div>
+
+<!-- Settings-Dialog (modal window)  ---------------------------------------------------------------------------------->
+<div id="settingsWindow" class="w3-modal">
+  <div class="w3-modal-content w3-animate-zoom" style="max-width:400px">
+    <!-- Cancel button ----------------------------------------------------->
+    <div id="settingsCancelBtn" class="w3-button w3-light-gray w3-hover-red w3-display-topright"> &times; </div>
+    <!-- Title ------------------------------------------------------------->
+    <div                        class="w3-container w3-center w3-xlarge"> Settings </div>
+    <!-- Input-Felder ------------------------------------------------------>
+    <div id="settingsForm"      class="w3-container"> </div>
+    <!-- Save button ------------------------------------------------------->
+    <div id="settingsSaveBtn"   class="w3-container w3-padding-16">
+      <div class="w3-block w3-btn w3-teal w3-ripple"> save </div>
+    </div>
+  </div>
+</div>
+
+
+</body>
+</html>
