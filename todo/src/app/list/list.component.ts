@@ -1,5 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {ToDoEntry} from "../to-do-entry";
+import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
+import {AddTodoComponent} from "../add-todo/add-todo.component";
 
 @Component({
   selector: 'app-list',
@@ -14,7 +16,18 @@ export class ListComponent implements OnInit {
     new ToDoEntry('Brot')
   ];
 
-  constructor() {
+  constructor(private modalService: NgbModal) {
+  }
+
+  addToDoButtonClicked() {
+    const modalReference = this.modalService.open(AddTodoComponent);
+    modalReference.result
+      .then((result: any) => {
+        this.todoList.push(new ToDoEntry(result as string));
+      })
+      .catch((error) => {
+        console.log('Window closed: ' + error);
+      })
   }
 
   done(index: number): void {
