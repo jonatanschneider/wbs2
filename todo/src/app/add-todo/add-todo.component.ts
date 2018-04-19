@@ -20,6 +20,10 @@ export class AddTodoComponent implements OnInit {
     }
   }
 
+  close() {
+    this.activeModal.dismiss();
+  }
+
   ngOnInit() {
   }
 
