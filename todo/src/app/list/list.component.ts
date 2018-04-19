@@ -16,6 +16,8 @@ export class ListComponent implements OnInit {
     new ToDoEntry('Brot')
   ];
 
+  public doneList: ToDoEntry[] = [];
+
   constructor(private modalService: NgbModal) {
   }
 
@@ -31,7 +33,17 @@ export class ListComponent implements OnInit {
   }
 
   done(index: number): void {
+    this.doneList.push(this.todoList[index]);
     this.todoList.splice(index, 1);
+  }
+
+  undone(index: number): void {
+    this.todoList.push(this.doneList[index]);
+    this.doneList.splice(index, 1);
+  }
+
+  delete(index: number): void {
+    this.doneList.splice(index, 1);
   }
 
   ngOnInit() {
