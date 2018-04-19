@@ -5,10 +5,12 @@
   </button>
 </div>
 <div class="modal-body">
-  <div class="form-group">
-    <label for="itemInput">Title</label>
-    <input type="text" class="form-control" id="itemInput" [(ngModel)]="title" required>
-  </div>
+  <form name="add-todo" (ngSubmit)="save()">
+    <div class="form-group">
+      <label for="itemInput">Title</label>
+      <input type="text" class="form-control" id="itemInput" [(ngModel)]="title" name="item-name" required>
+    </div>
+  </form>
 </div>
 <div class="modal-footer">
   <button type="button" class="btn btn-outline-danger" (click)="activeModal.dismiss()">Close</button>
