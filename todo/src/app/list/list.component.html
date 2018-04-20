@@ -1,0 +1,49 @@
+<div class="container">
+  <h5>ToDo</h5>
+
+  <table class="table">
+    <thead>
+    <tr>
+      <th scope="col"></th>
+      <th scope="col">Title</th>
+      <th scope="col">Date</th>
+      <th scope="col" class="text-right"><button type="button" class="btn btn-success" (click)="addToDoButtonClicked()">Add</button></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let item of todoList; let i = index">
+      <td>{{i}}</td>
+      <td>{{item.title}}</td>
+      <td>{{item.date}}</td>
+      <td class="text-right">
+        <button type="button" class="btn btn-secondary" (click)="done(i)">Done</button>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+<div class="container" *ngIf="doneList.length > 0">
+  <h5>Done</h5>
+
+  <table class="table">
+    <thead>
+    <tr>
+      <th scope="col"></th>
+      <th scope="col">Title</th>
+      <th scope="col">Date</th>
+      <th scope="col"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let item of doneList; let i = index">
+      <td>{{i}}</td>
+      <td>{{item.title}}</td>
+      <td>{{item.date}}</td>
+      <td class="text-right">
+        <button type="button" class="btn btn-danger" (click)="delete(i)">Delete</button>
+        <button type="button" class="btn btn-secondary" (click)="undone(i)">Undone</button>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div>
