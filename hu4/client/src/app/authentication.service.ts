@@ -1,0 +1,59 @@
+import { Injectable } from '@angular/core';
+import { User } from './user';
+import { Observable } from 'rxjs/Observable';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { HttpClient } from '@angular/common/http';
+import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/catch';
+
+@Injectable()
+export class AuthenticationService {
+  user: BehaviorSubject<User> = new BehaviorSubject<User>(undefined);
+
+  constructor(private httpClient: HttpClient) { }
+
+  login(username: string, password: string): Observable<boolean> {
+    return this.httpClient.post("/login", {
+      username: username,
+      password: password
+    }, {observe: 'response'})
+      .map(response => {
+        if(response.status === 200) {
+          this.user.next(new User(username));
+          return true;
+        } else {
+          this.user.next(undefined);
+          // ToDo: Use NotificaionService
+          console.log("Error: " + response.body);
+        }
+        return false;
+      })
+  }
+
+  logout(): Observable<boolean> {
+
+    return this.httpClient.post("/logout", {}, {observe: 'response'})
+      .map(response => {
+        if(response.status === 200) {
+          this.user.next(undefined);
+          return true;
+        }
+        return false;
+      })
+  }
+
+  isUserLoggedIn(): Observable<boolean> {
+    return this.httpClient.get("/login/check", {observe: 'response'})
+      .map(result => {
+        if (result.status === 200) {
+          return true;
+        }
+        this.user.next(undefined);
+        return false;
+      })
+  }
+
+  get watchUser(): Observable<User> {
+    return this.user.asObservable();
+  }
+}

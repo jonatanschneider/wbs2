@@ -1,0 +1,27 @@
+<div class="modal-header">
+  <h4 class="modal-title">Edit user</h4>
+  <button class="close" aria-label="Close" (click)="close()">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<div class="modal-body">
+  <form (submit)="save()">
+    <div class="form-group">
+      <label for="vorname">First name</label>
+      <input type="text" class="form-control" id="vorname" [(ngModel)]="vorname" name="vorname" required>
+    </div>
+    <div class="form-group">
+      <label for="nachname">Last name</label>
+      <input type="text" class="form-control" id="nachname" [(ngModel)]="nachname" name="nachname" required>
+    </div>
+    <div class="form-group">
+      <label for="password">Password (optional)</label>
+      <input type="password" class="form-control" id="password" [(ngModel)]="password" name="password">
+    </div>
+  </form>
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-outline-danger" (click)="close()">Close</button>
+  <button type="button" class="btn btn-danger" (click)="debug()">LOG</button>
+  <button type="submit" class="btn btn-success">Save</button>
+</div>
