@@ -43,6 +43,7 @@ export class UserlistComponent implements OnInit {
         this.userService.updateUser(user).subscribe(success => {
           if(success){
             this.notificationService.success("User " + user.username + " successfully updated");
+            this.users.splice(this.users.findIndex(listItem => user.id === listItem.id), 1, user);
           } else {
             this.notificationService.danger("User " + user.username + " could not be updated");
           }

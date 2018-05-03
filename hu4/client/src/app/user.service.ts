@@ -37,9 +37,9 @@ export class UserService {
         nachname: user.nachname
       }
     }
-    return this.httpClient.put("/user/" + user.id, body)
+    return this.httpClient.put("/user/" + user.id, body, {observe: 'response'})
       .map(result => {
-        return result === 200;
+        return result.status === 201;
       });
   }
 
