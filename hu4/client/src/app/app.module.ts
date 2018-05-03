@@ -16,7 +16,23 @@ import { EdituserComponent } from './edituser/edituser.component';
 import { NotificationService } from './notification.service';
 import { AlertComponent } from './alert/alert.component';
 import { AddUserComponent } from './add-user/add-user.component';
+import { RouterModule, Routes } from '@angular/router';
 
+const APPROUTES: Routes = [
+  {
+    path: '',
+    redirectTo: '/users',
+    pathMatch: 'full'
+  },
+  {
+    path: 'users',
+    component: UserlistComponent
+  },
+  {
+    path: 'create',
+    component: AddUserComponent
+  }
+];
 
 @NgModule({
   declarations: [
@@ -27,13 +43,16 @@ import { AddUserComponent } from './add-user/add-user.component';
     UserlistComponent,
     EdituserComponent,
     AlertComponent,
-    AddUserComponent,
+    AddUserComponent
   ],
   imports: [
     BrowserModule,
     FormsModule,
     HttpClientModule,
-    NgbModule.forRoot()
+    NgbModule.forRoot(),
+    RouterModule.forRoot(APPROUTES, {
+      enableTracing: true
+    })
   ],
   providers: [
     AuthenticationService,

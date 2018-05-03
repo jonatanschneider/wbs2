@@ -10,14 +10,14 @@ export class UserService {
   }
 
   getUsers(): Observable<User[]> {
-    return this.httpClient.get<User[]>("/users", {observe: 'response'})
+    return this.httpClient.get<User[]>("/apiusers", {observe: 'response'})
       .map(result => {
         return result.body['users'];
       })
   }
 
   addUser(user: User): Observable<boolean> {
-    return this.httpClient.post("/user", user, {observe: 'response'}).map(result => {
+    return this.httpClient.post("/apiuser", user, {observe: 'response'}).map(result => {
         return result.status === 201;
       });
   }
@@ -37,14 +37,14 @@ export class UserService {
         nachname: user.nachname
       }
     }
-    return this.httpClient.put("/user/" + user.id, body, {observe: 'response'})
+    return this.httpClient.put("/apiuser/" + user.id, body, {observe: 'response'})
       .map(result => {
         return result.status === 201;
       });
   }
 
   delete(user: User): Observable<boolean> {
-    return this.httpClient.delete("/user/" + user.id, {observe: 'response'})
+    return this.httpClient.delete("/apiuser/" + user.id, {observe: 'response'})
       .map(result => {
         return result.status === 200;
       })

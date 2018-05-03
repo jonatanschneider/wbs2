@@ -20,7 +20,7 @@ export class AuthenticationService {
   }
 
   login(username: string, password: string): Observable<boolean> {
-    return this.httpClient.post("/login", {
+    return this.httpClient.post("/apilogin", {
       username: username,
       password: password
     }, {observe: 'response'})
@@ -39,7 +39,7 @@ export class AuthenticationService {
 
   logout(): Observable<boolean> {
 
-    return this.httpClient.post("/logout", {}, {observe: 'response'})
+    return this.httpClient.post("/apilogout", {}, {observe: 'response'})
       .map(response => {
         if(response.status === 200) {
           this.user.next(undefined);
@@ -50,7 +50,7 @@ export class AuthenticationService {
   }
 
   isUserLoggedIn(): Observable<boolean> {
-    return this.httpClient.get("/login/check", {observe: 'response'})
+    return this.httpClient.get("/apilogin/check", {observe: 'response'})
       .map(result => {
         if (result.status === 200) {
           return true;

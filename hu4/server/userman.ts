@@ -266,7 +266,7 @@ router.use( session( {
  * { "message"  : "user Musterfrau still logged in",
  *   "username" : "Musterfrau"                            }
  */
-router.get    ("/login/check", function (req: Request, res: Response) {
+router.get    ("/apilogin/check", function (req: Request, res: Response) {
 
 	//--- check Rights -> RETURN if not sufficient ------------------------------
 	if (!checkRights(req,res, new Rights (true, false))) {
@@ -288,7 +288,7 @@ router.get    ("/login/check", function (req: Request, res: Response) {
  * @apiExample {url} Usage Example
  * http://localhost:8080/login
  */
-router.post   ("/login",       function (req: Request, res: Response) {
+router.post   ("/apilogin",       function (req: Request, res: Response) {
   let status   : number = 500;  // Initial HTTP response status
   let message  : string = ""; // To be set
   let username : string = req.body.username;
@@ -340,7 +340,7 @@ router.post   ("/login",       function (req: Request, res: Response) {
  * { "message"  : "Musterfrau logout successfull",
  *   "username" : "Musterfrau"                            }
  */
-router.post   ("/logout",      function (req: Request, res: Response) {
+router.post   ("/apilogout",      function (req: Request, res: Response) {
 
   //--- check Rights -> RETURN if not sufficient ------------------------------
   if (!checkRights(req,res, new Rights (true, false))) {
@@ -386,7 +386,7 @@ router.post   ("/logout",      function (req: Request, res: Response) {
  *
  * @apiUse BadRequest
  */
-router.post   ("/user",        function (req: Request, res: Response) {
+router.post   ("/apiuser",        function (req: Request, res: Response) {
   let username : string = (req.body.username ? req.body.username : "").trim();
   let password : string = (req.body.password ? req.body.password : "").trim();
   let vorname  : string = (req.body.vorname  ? req.body.vorname  : "").trim();
@@ -459,7 +459,7 @@ router.post   ("/user",        function (req: Request, res: Response) {
  * @apiUse NotFound
  * @apiUse Gone
  */
-router.get    ("/user/:id",    function (req: Request, res: Response) {
+router.get    ("/apiuser/:id",    function (req: Request, res: Response) {
   let status   : number = 500; // Initial HTTP response status
   let message  : string = "";  // To be set
   let id       : number = (req.params.id != "" ? req.params.id: -1);
@@ -526,7 +526,7 @@ router.get    ("/user/:id",    function (req: Request, res: Response) {
  * @apiUse NotFound
  * @apiUse Gone
  */
-router.put    ("/user/:id",    function (req: Request, res: Response) {
+router.put    ("/apiuser/:id",    function (req: Request, res: Response) {
   let status      : number = 500; // Initial HTTP response status
   let message     : string = ""; // To be set
   let updateData  : any = {}; // No type provided - depends on existence of password
@@ -599,7 +599,7 @@ router.put    ("/user/:id",    function (req: Request, res: Response) {
  * @apiUse Gone
  * @apiUse Forbidden
  */
-router.delete ("/user/:id",    function (req: Request, res: Response) {
+router.delete ("/apiuser/:id",    function (req: Request, res: Response) {
   let status    : number = 500; // Initial HTTP response status
   let message   : string = "";  // To be set
   let id        : number = (req.body.id != "" ? req.params.id: -1);
@@ -637,7 +637,7 @@ router.delete ("/user/:id",    function (req: Request, res: Response) {
   });
 });
 
-router.get("/users", function(req: Request, res: Response) {
+router.get("/apiusers", function(req: Request, res: Response) {
   if (!checkRights(req,res, new Rights (true, false))) {
     return;
   }
