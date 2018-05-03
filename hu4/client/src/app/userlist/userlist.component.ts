@@ -27,7 +27,10 @@ export class UserlistComponent implements OnInit {
   deleteUser(user: User) {
     this.userService.delete(user).subscribe(result => {
       if(result) {
+        this.notificationService.success("User " + user.username + " successfully deleted");
         this.users.splice(this.users.findIndex(listItem => user === listItem), 1);
+      } else {
+        this.notificationService.danger("User " + user.username + " could not be deleted");
       }
     });
   }
