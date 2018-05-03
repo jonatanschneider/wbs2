@@ -3,5 +3,14 @@
 <div class="container content">
   <app-alert></app-alert>
 
-  <app-userlist *ngIf="user"></app-userlist>
+  <div *ngIf="user" class="row">
+    <div class="col-lg-4 order-lg-1">
+      <h2>User list</h2>
+      <app-add-user></app-add-user>
+    </div>
+    <div class="col-lg-8">
+      <h2>Add user</h2>
+      <app-userlist></app-userlist>
+    </div>
+  </div>
 </div>

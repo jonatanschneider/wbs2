@@ -16,6 +16,12 @@ export class UserService {
       })
   }
 
+  addUser(user: User): Observable<boolean> {
+    return this.httpClient.post("/user", user, {observe: 'response'}).map(result => {
+        return result.status === 201;
+      });
+  }
+
   updateUser(user: User): Observable<boolean> {
     let body: object;
 

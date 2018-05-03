@@ -15,6 +15,7 @@ import { UserService } from './user.service';
 import { EdituserComponent } from './edituser/edituser.component';
 import { NotificationService } from './notification.service';
 import { AlertComponent } from './alert/alert.component';
+import { AddUserComponent } from './add-user/add-user.component';
 
 
 @NgModule({
@@ -25,7 +26,8 @@ import { AlertComponent } from './alert/alert.component';
     NavbarComponent,
     UserlistComponent,
     EdituserComponent,
-    AlertComponent
+    AlertComponent,
+    AddUserComponent,
   ],
   imports: [
     BrowserModule,
