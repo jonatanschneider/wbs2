@@ -16,6 +16,10 @@ export class EdituserComponent implements OnInit {
   ngOnInit() {
   }
 
+  setUser(user: User): void {
+    this.user = new User(user.username, user.id, user.vorname, user.nachname, user.password);
+  }
+
   save() {
     this.activeModal.close(this.user);
   }
