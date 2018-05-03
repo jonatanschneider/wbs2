@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthenticationService } from '../authentication.service';
+import { NotificationService } from '../notification.service';
 
 @Component({
   selector: 'app-login',
@@ -10,7 +11,8 @@ export class LoginComponent implements OnInit {
   username: string = "";
   password: string = "";
 
-  constructor(private authenticationService: AuthenticationService) {
+  constructor(private authenticationService: AuthenticationService,
+              private notificationService: NotificationService) {
   }
 
   ngOnInit() {
@@ -24,13 +26,13 @@ export class LoginComponent implements OnInit {
     if (this.password) {
       this.authenticationService.login(this.username, this.password).subscribe(user => {
         if (user) {
-          console.log("Successfully logged in");
+          this.notificationService.success("Successfully logged in");
         } else {
-          console.log("Login failed");
+          this.notificationService.danger("Login failed");
         }
-      })
+      });
     } else {
-      console.log("Enter password");
+      this.notificationService.warn("Enter password");
     }
   }
 }

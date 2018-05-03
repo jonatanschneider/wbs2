@@ -13,6 +13,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { UserlistComponent } from './userlist/userlist.component';
 import { UserService } from './user.service';
 import { EdituserComponent } from './edituser/edituser.component';
+import { NotificationService } from './notification.service';
 
 
 @NgModule({
@@ -32,6 +33,7 @@ import { EdituserComponent } from './edituser/edituser.component';
   ],
   providers: [
     AuthenticationService,
+    NotificationService,
     UserService
   ],
   bootstrap: [

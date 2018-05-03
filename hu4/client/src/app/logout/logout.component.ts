@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthenticationService } from '../authentication.service';
+import { NotificationService } from '../notification.service';
 
 @Component({
   selector: 'app-logout',
@@ -8,12 +9,15 @@ import { AuthenticationService } from '../authentication.service';
 })
 export class LogoutComponent implements OnInit {
 
-  constructor(private authenticationService: AuthenticationService) { }
+  constructor(private authenticationService: AuthenticationService,
+              private notificationService: NotificationService) { }
 
   ngOnInit() {
   }
 
   logout() {
-    this.authenticationService.logout().subscribe();
+    this.authenticationService.logout().subscribe(() => {
+      this.notificationService.success("Successfully logged out");
+    });
   }
 }
