@@ -44,9 +44,9 @@ export class UserService {
   }
 
   delete(user: User): Observable<boolean> {
-    return this.httpClient.delete("/user/" + user.id)
+    return this.httpClient.delete("/user/" + user.id, {observe: 'response'})
       .map(result => {
-        return result === 200;
+        return result.status === 200;
       })
   }
 
