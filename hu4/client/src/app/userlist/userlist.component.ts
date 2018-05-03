@@ -34,7 +34,7 @@ export class UserlistComponent implements OnInit {
     const modalReference = this.modalService.open(EdituserComponent);
     modalReference.componentInstance.user = user;
     modalReference.result
-      .then((result: User) => {
+      .then((user: User) => {
         this.userService.updateUser(user)
       })
       .catch((error) => {
