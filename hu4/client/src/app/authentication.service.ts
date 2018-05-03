@@ -10,7 +10,14 @@ import 'rxjs/add/operator/catch';
 export class AuthenticationService {
   user: BehaviorSubject<User> = new BehaviorSubject<User>(undefined);
 
-  constructor(private httpClient: HttpClient) { }
+  constructor(private httpClient: HttpClient) {
+    this.isUserLoggedIn().subscribe(result => {
+      if(result) {
+        // TODO: add username here, not delivered by server
+        this.user.next(new User());
+      }
+    })
+  }
 
   login(username: string, password: string): Observable<boolean> {
     return this.httpClient.post("/login", {
@@ -48,7 +55,6 @@ export class AuthenticationService {
         if (result.status === 200) {
           return true;
         }
-        this.user.next(undefined);
         return false;
       })
   }
