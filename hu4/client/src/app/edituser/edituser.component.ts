@@ -11,8 +11,7 @@ import { UserService } from '../user.service';
 export class EdituserComponent implements OnInit {
   user: User;
 
-  constructor(private activeModal: NgbActiveModal,
-              private userService: UserService) { }
+  constructor(private activeModal: NgbActiveModal) { }
 
   ngOnInit() {
   }
@@ -24,5 +23,4 @@ export class EdituserComponent implements OnInit {
   close() {
     this.activeModal.dismiss();
   }
-
 }

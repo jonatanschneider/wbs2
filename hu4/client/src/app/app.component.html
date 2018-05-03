@@ -1,9 +1,7 @@
 <app-navbar></app-navbar>
 
 <div class="container content">
-  <p *ngFor="let alert of alerts">
-    <ngb-alert [type]="alert.type" (close)="close(alert)">{{alert.message}}</ngb-alert>
-  </p>
+  <app-alert></app-alert>
 
   <app-userlist *ngIf="user"></app-userlist>
 </div>
