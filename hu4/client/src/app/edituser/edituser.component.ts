@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { User } from '../user';
-import { UserService } from '../user.service';
 
 @Component({
   selector: 'app-edituser',

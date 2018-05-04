@@ -22,7 +22,6 @@ import { AuthenticationGuard } from './authentication.guard';
 const APPROUTES: Routes = [
   {
     path: '',
-    canActivate: [AuthenticationGuard],
     redirectTo: '/users',
     pathMatch: 'full'
   },
