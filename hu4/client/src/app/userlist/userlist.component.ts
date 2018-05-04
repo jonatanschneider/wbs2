@@ -28,7 +28,9 @@ export class UserlistComponent implements OnInit {
     });
     this.route.params.subscribe((params: any) => {
       this.userService.getUser(params['id']).subscribe(user => {
-        this.editUser(user);
+        if(user){
+          this.editUser(user);
+        }
       });
     })
   }

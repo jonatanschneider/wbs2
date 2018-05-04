@@ -25,6 +25,10 @@ const APPROUTES: Routes = [
     pathMatch: 'full'
   },
   {
+    path: 'users',
+    component: UserlistComponent
+  },
+  {
     path: 'users/:id',
     component: UserlistComponent
   },
