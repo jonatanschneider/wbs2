@@ -12,7 +12,7 @@ export class AuthenticationService {
 
   constructor(private httpClient: HttpClient) {
     this.isUserLoggedIn().subscribe(result => {
-      if(result) {
+      if (result) {
         // TODO: add username here, not delivered by server
         this.user.next(new User());
       }
@@ -20,18 +20,18 @@ export class AuthenticationService {
   }
 
   login(username: string, password: string): Observable<boolean> {
-    return this.httpClient.post("/apilogin", {
+    return this.httpClient.post('/apilogin', {
       username: username,
       password: password
     }, {observe: 'response'})
       .map(response => {
-        if(response.status === 200) {
+        if (response.status === 200) {
           this.user.next(new User(username));
           return true;
         } else {
           this.user.next(undefined);
           // ToDo: Use NotificaionService
-          console.log("Error: " + response.body);
+          console.log('Error: ' + response.body);
         }
         return false;
       })
@@ -39,9 +39,9 @@ export class AuthenticationService {
 
   logout(): Observable<boolean> {
 
-    return this.httpClient.post("/apilogout", {}, {observe: 'response'})
+    return this.httpClient.post('/apilogout', {}, {observe: 'response'})
       .map(response => {
-        if(response.status === 200) {
+        if (response.status === 200) {
           this.user.next(undefined);
           return true;
         }
@@ -50,12 +50,9 @@ export class AuthenticationService {
   }
 
   isUserLoggedIn(): Observable<boolean> {
-    return this.httpClient.get("/apilogin/check", {observe: 'response'})
+    return this.httpClient.get('/apilogin/check', {observe: 'response'})
       .map(result => {
-        if (result.status === 200) {
-          return true;
-        }
-        return false;
+        return result.status === 200;
       })
   }
 

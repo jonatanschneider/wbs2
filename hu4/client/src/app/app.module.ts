@@ -17,23 +17,28 @@ import { NotificationService } from './notification.service';
 import { AlertComponent } from './alert/alert.component';
 import { AddUserComponent } from './add-user/add-user.component';
 import { RouterModule, Routes } from '@angular/router';
+import { AuthenticationGuard } from './authentication.guard';
 
 const APPROUTES: Routes = [
   {
     path: '',
+    canActivate: [AuthenticationGuard],
     redirectTo: '/users',
     pathMatch: 'full'
   },
   {
     path: 'users',
+    canActivate: [AuthenticationGuard],
     component: UserlistComponent
   },
   {
     path: 'users/:id',
+    canActivate: [AuthenticationGuard],
     component: UserlistComponent
   },
   {
     path: 'create',
+    canActivate: [AuthenticationGuard],
     component: AddUserComponent
   }
 ];
@@ -59,6 +64,7 @@ const APPROUTES: Routes = [
     })
   ],
   providers: [
+    AuthenticationGuard,
     AuthenticationService,
     NotificationService,
     UserService
