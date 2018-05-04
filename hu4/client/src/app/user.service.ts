@@ -9,6 +9,13 @@ export class UserService {
   constructor(private httpClient: HttpClient) {
   }
 
+  getUser(id: number): Observable<User> {
+    return this.httpClient.get<User>("/apiuser/" + id, {observe: 'response'})
+      .map(result => {
+        return result.body['user'];
+      })
+  }
+
   getUsers(): Observable<User[]> {
     return this.httpClient.get<User[]>("/apiusers", {observe: 'response'})
       .map(result => {

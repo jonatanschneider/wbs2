@@ -25,7 +25,7 @@ const APPROUTES: Routes = [
     pathMatch: 'full'
   },
   {
-    path: 'users',
+    path: 'users/:id',
     component: UserlistComponent
   },
   {
