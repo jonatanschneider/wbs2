@@ -5,8 +5,8 @@ import { Alert } from './alert';
 
 @Injectable()
 export class NotificationService {
-  alerts: BehaviorSubject<Alert[]> = new BehaviorSubject<Alert[]>([]);
-  data: Alert[] = [];
+  private alerts: BehaviorSubject<Alert[]> = new BehaviorSubject<Alert[]>([]);
+  private data: Alert[] = [];
 
   constructor() { }
 
