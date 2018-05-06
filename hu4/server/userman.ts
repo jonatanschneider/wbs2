@@ -462,7 +462,7 @@ router.post   ("/apiuser",        function (req: Request, res: Response) {
 router.get    ("/apiuser/:id",    function (req: Request, res: Response) {
   let status   : number = 500; // Initial HTTP response status
   let message  : string = "";  // To be set
-  let id       : number = (req.params.id != "" ? req.params.id: -1);
+  let id       : string = req.params.id;
 
   //--- check Rights -> RETURN if not sufficient ------------------------------
   if (!checkRights(req,res, new Rights (true, false))) { return; }
@@ -472,6 +472,8 @@ router.get    ("/apiuser/:id",    function (req: Request, res: Response) {
   userlistCollection.findOne(query)
     .then((user: User) => {
       if (user !== null) {
+      	user['id'] = user['_id'];
+      	user['_id'] = undefined;
         message = "Selected item is " + user.vorname + " " + user.nachname;
         status = 200;
         res.status(status).json({user: user, message: message});
