@@ -27,11 +27,13 @@ export class UserlistComponent implements OnInit {
       this.users = users;
     });
     this.route.params.subscribe((params: any) => {
-      this.userService.getUser(params['id']).subscribe(user => {
-        if(user){
-          this.editUser(user);
-        }
-      });
+      if(params['id'] != undefined) {
+        this.userService.getUser(params['id']).subscribe(user => {
+          if (user) {
+            this.editUser(user);
+          }
+        });
+      }
     })
   }
 
