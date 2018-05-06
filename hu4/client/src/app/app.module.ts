@@ -18,11 +18,12 @@ import { AlertComponent } from './alert/alert.component';
 import { AddUserComponent } from './add-user/add-user.component';
 import { RouterModule, Routes } from '@angular/router';
 import { AuthenticationGuard } from './authentication.guard';
+import { LandingPageComponent } from './landing-page/landing-page.component';
 
 const APPROUTES: Routes = [
   {
     path: '',
-    redirectTo: '/users',
+    component: LandingPageComponent,
     pathMatch: 'full'
   },
   {
@@ -51,7 +52,8 @@ const APPROUTES: Routes = [
     UserlistComponent,
     EdituserComponent,
     AlertComponent,
-    AddUserComponent
+    AddUserComponent,
+    LandingPageComponent
   ],
   imports: [
     BrowserModule,

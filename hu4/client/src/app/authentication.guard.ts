@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router } from '@angular/router';
 import { AuthenticationService } from './authentication.service';
 import { Observable } from 'rxjs/Observable';
 import { NotificationService } from './notification.service';
@@ -8,7 +8,8 @@ import { NotificationService } from './notification.service';
 export class AuthenticationGuard implements CanActivate {
 
   constructor(private authenticationService: AuthenticationService,
-              private notificationService: NotificationService){
+              private notificationService: NotificationService,
+              private router: Router){
   }
 
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> {
@@ -17,6 +18,7 @@ export class AuthenticationGuard implements CanActivate {
         return true;
       }  else {
         this.notificationService.warn('You are not authorized to view this page. Please log in');
+        this.router.navigate(['/']);
         return false;
       }
     });

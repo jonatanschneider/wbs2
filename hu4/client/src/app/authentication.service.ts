@@ -8,15 +8,21 @@ import 'rxjs/add/operator/catch';
 
 @Injectable()
 export class AuthenticationService {
-  user: BehaviorSubject<User> = new BehaviorSubject<User>(undefined);
+  user: BehaviorSubject<User>;
 
   constructor(private httpClient: HttpClient) {
+    if (window.localStorage.getItem('user')) {
+      this.user = new BehaviorSubject<User>(new User());
+    } else {
+      this.user = new BehaviorSubject<User>(undefined);
+    }
     this.isUserLoggedIn().subscribe(result => {
       if (result) {
+        this.setLocalStorageLogin(true);
         // TODO: add username here, not delivered by server
         this.user.next(new User());
       }
-    })
+    });
   }
 
   login(username: string, password: string): Observable<boolean> {
@@ -26,6 +32,7 @@ export class AuthenticationService {
     }, {observe: 'response'})
       .map(response => {
         if (response.status === 200) {
+          this.setLocalStorageLogin(true);
           this.user.next(new User(username));
           return true;
         } else {
@@ -38,9 +45,9 @@ export class AuthenticationService {
   }
 
   logout(): Observable<boolean> {
-
     return this.httpClient.post('/apilogout', {}, {observe: 'response'})
       .map(response => {
+        this.setLocalStorageLogin(false);
         if (response.status === 200) {
           this.user.next(undefined);
           return true;
@@ -54,6 +61,14 @@ export class AuthenticationService {
       .map(result => {
         return result.status === 200;
       })
+  }
+
+  private setLocalStorageLogin(isLoggedIn: boolean): void {
+    if (isLoggedIn) {
+      window.localStorage.setItem('user', 'pimmel');
+    } else {
+      window.localStorage.removeItem('user');
+    }
   }
 
   get watchUser(): Observable<User> {
