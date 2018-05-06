@@ -11,33 +11,33 @@ export class NotificationService {
   constructor() { }
 
   public success(message: string): void {
-    this.data.push(new Alert(message, 'success'));
-    this.updateAlerts();
+    this.updateAlerts(new Alert(message, 'success'));
   }
 
   public info(message: string): void {
-    this.data.push(new Alert(message, 'info'));
-    this.updateAlerts();
+    this.updateAlerts(new Alert(message, 'info'));
   }
 
   public warn(message: string): void {
-    this.data.push(new Alert(message, 'warning'));
-    this.updateAlerts();
+    this.updateAlerts(new Alert(message, 'warning'));
   }
 
   public danger(message: string): void {
-    this.data.push(new Alert(message, 'danger'));
-    this.updateAlerts();
+    this.updateAlerts(new Alert(message, 'danger'));
   }
 
   public dismiss(alert: Alert): void {
     const index: number = this.data.indexOf(alert);
     this.data.splice(index, 1);
-    this.updateAlerts();
+    this.alerts.next(this.data);
   }
 
-  private updateAlerts() {
+  private updateAlerts(alert: Alert) {
+    this.data.push(alert);
     this.alerts.next(this.data);
+    setTimeout(alert => {
+      this.dismiss(alert);
+    }, 5000);
   }
 
   get watchAlerts(): Observable<Alert[]> {
