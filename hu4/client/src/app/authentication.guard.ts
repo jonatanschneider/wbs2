@@ -11,7 +11,7 @@ export class AuthenticationGuard implements CanActivate {
               private notificationService: NotificationService){
   }
 
-  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> | Promise<boolean> | boolean {
+  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> {
     return this.authenticationService.watchUser.map(user => {
       if(user) {
         return true;
