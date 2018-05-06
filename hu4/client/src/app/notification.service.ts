@@ -37,7 +37,6 @@ export class NotificationService {
   }
 
   private updateAlerts() {
-    console.log("Notification Service Called");
     this.alerts.next(this.data);
   }
 

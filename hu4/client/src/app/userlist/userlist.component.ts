@@ -62,9 +62,8 @@ export class UserlistComponent implements OnInit {
           }
         });
       })
-      .catch((error) => {
-        this.location.go('/users')
-        console.log('Window closed: ' + error);
+      .catch(() => {
+        this.location.go('/users');
       });
   }
 }
