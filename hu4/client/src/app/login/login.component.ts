@@ -8,8 +8,8 @@ import { NotificationService } from '../notification.service';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit {
-  username: string = "";
-  password: string = "";
+  username: string = '';
+  password: string = '';
 
   constructor(private authenticationService: AuthenticationService,
               private notificationService: NotificationService) {
@@ -23,16 +23,19 @@ export class LoginComponent implements OnInit {
     this.username = this.username.trim();
     this.password = this.password.trim();
 
-    if (this.password) {
+    if (!this.username) {
+      this.notificationService.warn('Enter username');
+      return;
+    } else if (this.password) {
       this.authenticationService.login(this.username, this.password).subscribe(user => {
         if (user) {
-          this.notificationService.success("Successfully logged in");
+          this.notificationService.success('Successfully logged in');
         } else {
-          this.notificationService.danger("Login failed");
+          this.notificationService.danger('Login failed');
         }
       });
     } else {
-      this.notificationService.warn("Enter password");
+      this.notificationService.warn('Enter password');
     }
   }
 }

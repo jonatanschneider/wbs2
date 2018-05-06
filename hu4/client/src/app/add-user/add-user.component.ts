@@ -18,7 +18,14 @@ export class AddUserComponent {
   }
 
   add() {
-    this.userService.addUser(new User(this.username, 0, this.vorname, this.nachname, this.password))
+    if(!this.username)  {
+      this.notificationService.danger("Username must be set");
+      return;
+    } else if(!this.password){
+      this.notificationService.danger("Password must be set");
+      return;
+    }
+    this.userService.addUser(new User(this.username, "", this.vorname, this.nachname, this.password))
       .subscribe(result => {
         if(result) {
           this.notificationService.success("User created.");
