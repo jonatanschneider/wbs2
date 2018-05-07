@@ -35,7 +35,10 @@ MongoClient.connect("mongodb://localhost:27017")
   })
   .then<void>((res) => {
     if (!res) {
-      userlistCollection.insertOne({username: "admin", password: cryptoJS.MD5("admin").toString()});
+      userlistCollection.insertOne({username: "admin", password: cryptoJS.MD5("admin").toString(), isAdmin: true}).then(() => {
+          userlistCollection.insertOne({username: "user", password: cryptoJS.MD5("user").toString(), isAdmin: false})}
+    );
+
     }
     console.log("Database is connected ...\n");
   }).catch((err : MongoError) => {
@@ -48,13 +51,16 @@ class User {
   username : string;
   vorname  : string;
   nachname : string;
-  constructor(id:number, time:string, username:string, vorname:string, nachname:string) {
-    this._id       = id;
+  isAdmin  : boolean;
+  constructor(id:number, time:string, username:string, vorname:string, nachname:string, isAdmin = false) {
+    this._id      = id;
     this.time     = time;
     this.username = username;
     this.vorname  = vorname;
     this.nachname = nachname;
+    this.isAdmin   = isAdmin;
   }
+
 }
 
 /*****************************************************************************
@@ -101,17 +107,14 @@ io.on('connection', (socket) => {
  *****************************************************************************/
 //--- Class that deals with Rights --------------------------------------------
 class Rights {
-  admin      : boolean; // user is administrator
-  superadmin : boolean; // user is super-administrator
-  // can be extended here with other user-roles
-  constructor(admin: boolean, superadmin: boolean) {
-    this.admin      = admin;
-    this.superadmin = superadmin;
-    // can be extended here with other user roles
+  admin: boolean; // user is administrator
+
+  constructor(admin: boolean) {
+    this.admin = admin;
   }
 }
 //--- checkRight, is there still a session and are the rights sufficient ------
-function checkRights(req: Request, res: Response, rights: Rights) : boolean {
+function checkRights(req: Request, res: Response, neededRights: Rights) : boolean {
 
   //--- check if session is existing ------------------------------------------
   if (!req.session.rights) {
@@ -124,15 +127,15 @@ function checkRights(req: Request, res: Response, rights: Rights) : boolean {
   else  {
     let rightsOK : boolean = true;
     let message  : string  = "unsufficient rights";
-    if (rights.admin) {  // checks if "admin" is needed
+
+    // only login required
+    if(!neededRights.admin) return true;
+
+    if (neededRights.admin) {  // checks if "admin" is needed
       rightsOK = rightsOK && req.session.rights.admin;
       message += ": not logged in"
     }
-    if (rights.superadmin) { // ckecks if "superadmin" is needed
-      rightsOK = rightsOK && req.session.rights.superadmin;
-      message += ", not admin";
-    }
-    // can be extended here checking other user roles
+
     if (! rightsOK) {
       res.status(401);     // set HTTP response state
       res.json({ message  : message });  // send HTTP-response
@@ -269,7 +272,7 @@ router.use( session( {
 router.get    ("/apilogin/check", function (req: Request, res: Response) {
 
 	//--- check Rights -> RETURN if not sufficient ------------------------------
-	if (!checkRights(req,res, new Rights (true, false))) {
+	if (!checkRights(req,res, new Rights (false))) {
 	  return;
 	}
 
@@ -301,9 +304,8 @@ router.post   ("/apilogin",       function (req: Request, res: Response) {
       if (user !== null) {
         message = username + " logged in by username/password";
         req.session.username = username;    // set session-variable username
-        // set rights: here allways "admin" and "superadmin"
         // can be extended with database-queries using rows.id
-        req.session.rights = new Rights(true, true);
+        req.session.rights = new Rights(user.isAdmin);
         status = 200;
       } else { // username and passwort does not match message = "Id " + id + " not found";
         message = "Not Valid: user '" + username + "' does not match password";
@@ -343,7 +345,7 @@ router.post   ("/apilogin",       function (req: Request, res: Response) {
 router.post   ("/apilogout",      function (req: Request, res: Response) {
 
   //--- check Rights -> RETURN if not sufficient ------------------------------
-  if (!checkRights(req,res, new Rights (true, false))) {
+  if (!checkRights(req,res, new Rights (false))) {
     return;
   }
 
@@ -391,13 +393,16 @@ router.post   ("/apiuser",        function (req: Request, res: Response) {
   let password : string = (req.body.password ? req.body.password : "").trim();
   let vorname  : string = (req.body.vorname  ? req.body.vorname  : "").trim();
   let nachname : string = (req.body.nachname ? req.body.nachname : "").trim();
+  let isAdmin  : boolean = req.body.isAdmin ? req.body.isAdmin : false;
   let message  : string = "";
   let status   : number = 500; // Initial HTTP response status
 
   //--- check Rights -> RETURN if not sufficient ------------------------------
-  if (!checkRights(req, res, new Rights(true, false))) {
+  if (!checkRights(req, res, new Rights(true))) {
     return;
   }
+
+  console.log(req.session.username);
 
   //-- ok -> insert user-data into database -----------------------------------
   if ((username != "") && (vorname != "") && (nachname != "")) {
@@ -407,7 +412,8 @@ router.post   ("/apiuser",        function (req: Request, res: Response) {
       username : username,
       vorname  : vorname,
       nachname : nachname,
-      password : cryptoJS.MD5(password).toString()
+      password : cryptoJS.MD5(password).toString(),
+      isAdmin: isAdmin
     };
     userlistCollection.insertOne(insertData)
       .then((result: InsertOneWriteOpResult) => {
@@ -465,7 +471,7 @@ router.get    ("/apiuser/:id",    function (req: Request, res: Response) {
   let id       : string = req.params.id;
 
   //--- check Rights -> RETURN if not sufficient ------------------------------
-  if (!checkRights(req,res, new Rights (true, false))) { return; }
+  if (!checkRights(req,res, new Rights (false))) { return; }
 
   //--- ok -> get user from database ------------------------------------------
   let query:Object = {_id: new ObjectID(id)};
@@ -535,7 +541,7 @@ router.put    ("/apiuser/:id",    function (req: Request, res: Response) {
   let query       : any = {};
 
   //--- check Rights -> RETURN if not sufficient ------------------------------
-  if (!checkRights(req,res, new Rights (true, false))) { return; }
+  if (!checkRights(req,res, new Rights (true))) { return; }
 
   //--- check if parameters exists -> initialize each if not ------------------
   let id       : number = (req.params.id     ? req.params.id     : -1);
@@ -607,7 +613,7 @@ router.delete ("/apiuser/:id",    function (req: Request, res: Response) {
   let id        : number = (req.body.id != "" ? req.params.id: -1);
 
   //--- check Rights -> RETURN if not sufficient ------------------------------
-  if (!checkRights(req,res, new Rights (true, false))) {
+  if (!checkRights(req,res, new Rights (true))) {
     return;
   }
 
@@ -640,7 +646,7 @@ router.delete ("/apiuser/:id",    function (req: Request, res: Response) {
 });
 
 router.get("/apiusers", function(req: Request, res: Response) {
-  if (!checkRights(req,res, new Rights (true, false))) {
+  if (!checkRights(req,res, new Rights (false))) {
     return;
   }
 
