@@ -1,25 +1,22 @@
 /*****************************************************************************
  ***  Import some module from node.js (see: expressjs.com/en/4x/api.html)    *
  *****************************************************************************/
-import * as express    from "express";         // routing
+import * as express from "express";         // routing
 import * as bodyParser from "body-parser";     // parsing parameters
-import * as session    from "express-session"; // sessions
-import * as cryptoJS   from "crypto-js";       // crypting
-import * as db         from "mysql";           // mysql database
-import * as socket     from "socket.io";
+import * as session from "express-session"; // sessions
+import * as cryptoJS from "crypto-js";       // crypting
+import * as socket from "socket.io";
 
-import {Request, Response}      from "express";
-import {Connection, MysqlError} from "mysql";
+import { Request, Response } from "express";
 import {
-  Collection,
-  Db,
-  DeleteWriteOpResultObject,
-  InsertOneWriteOpResult,
-  MongoClient,
-  MongoError,
-  UpdateWriteOpResult,
+    Collection,
+    Db,
+    DeleteWriteOpResultObject,
+    MongoClient,
+    MongoError,
+    UpdateWriteOpResult,
 } from 'mongodb';
-import {ObjectID} from 'bson';
+import { ObjectID } from 'bson';
 
 /*****************************************************************************
  ***  setup database and its structure                                       *
@@ -28,39 +25,48 @@ let usermanDB: Db;
 let userlistCollection: Collection;
 //---- connect to database ----------------------------------------------------
 MongoClient.connect("mongodb://localhost:27017")
-  .then((dbClient: MongoClient) => {
-    usermanDB = dbClient.db("userman");
-    userlistCollection = usermanDB.collection("user");
-    return userlistCollection.findOne({username: "admin"})
-  })
-  .then<void>((res) => {
-    if (!res) {
-      userlistCollection.insertOne({username: "admin", password: cryptoJS.MD5("admin").toString(), isAdmin: true}).then(() => {
-          userlistCollection.insertOne({username: "user", password: cryptoJS.MD5("user").toString(), isAdmin: false})}
-    );
-
-    }
-    console.log("Database is connected ...\n");
-  }).catch((err : MongoError) => {
+    .then((dbClient: MongoClient) => {
+        usermanDB = dbClient.db("userman");
+        userlistCollection = usermanDB.collection("user");
+        return userlistCollection.findOne({username: "admin"});
+    })
+    .then<void>((res) => {
+        if (!res) {
+            userlistCollection.insertOne({
+                username: "admin",
+                password: cryptoJS.MD5("admin").toString(),
+                isAdmin: true
+            }).then(() => {
+                    userlistCollection.insertOne({
+                        username: "user",
+                        password: cryptoJS.MD5("user").toString(),
+                        isAdmin: false
+                    });
+                }
+            );
+        }
+        console.log("Database is connected ...\n");
+    }).catch((err: MongoError) => {
     console.error("Error connecting to database ...\n" + err);
-  });
+});
+
 //--- Data structure that represents a user in database -----------------------
 class User {
-  _id       : number;
-  time     : string; // time-time format defined[RFC 3339] e.g. 2017-12-31T23:59:6
-  username : string;
-  vorname  : string;
-  nachname : string;
-  isAdmin  : boolean;
-  constructor(id:number, time:string, username:string, vorname:string, nachname:string, isAdmin = false) {
-    this._id      = id;
-    this.time     = time;
-    this.username = username;
-    this.vorname  = vorname;
-    this.nachname = nachname;
-    this.isAdmin   = isAdmin;
-  }
+    _id: number;
+    time: string; // time-time format defined[RFC 3339] e.g. 2017-12-31T23:59:6
+    username: string;
+    vorname: string;
+    nachname: string;
+    isAdmin: boolean;
 
+    constructor(id: number, time: string, username: string, vorname: string, nachname: string, isAdmin = false) {
+        this._id = id;
+        this.time = time;
+        this.username = username;
+        this.vorname = vorname;
+        this.nachname = nachname;
+        this.isAdmin = isAdmin;
+    }
 }
 
 /*****************************************************************************
@@ -68,38 +74,37 @@ class User {
  *****************************************************************************/
 let router = express();
 let server = router.listen(8080, function () {
-  console.log("");
-  console.log("-------------------------------------------------------------");
-  console.log("  userMan (complete)");
-  console.log("  (Dokumentation als API-Doc)");
-  console.log("  Dokumentation erstellen mit (im Terminal von webStorm)");
-  console.log("     'apidoc -o apidoc -e node_modules' ");
-  console.log("  Dokumentation aufrufen:");
-  console.log("     Doppelklick auf: apidoc/index.html ");
-  console.log("");
-  console.log("  Aufruf: http://localhost:8080");
-  console.log("-------------------------------------------------------------");
+    console.log("");
+    console.log("-------------------------------------------------------------");
+    console.log("  userMan (complete)");
+    console.log("  (Dokumentation als API-Doc)");
+    console.log("  Dokumentation erstellen mit (im Terminal von webStorm)");
+    console.log("     'apidoc -o apidoc -e node_modules' ");
+    console.log("  Dokumentation aufrufen:");
+    console.log("     Doppelklick auf: apidoc/index.html ");
+    console.log("");
+    console.log("  Aufruf: http://localhost:8080");
+    console.log("-------------------------------------------------------------");
 });
-
 
 /*****************************************************************************
  ***  set up webSocket                                                       *
  *****************************************************************************/
 let io = socket(server);
 io.on('connection', (socket) => {
-	console.log('made socket connection', socket.id);
-	//--- Handle lock event -----------------------------------------------------
-	socket.on('lock', function( user ){
-		socket.broadcast.emit('lock', user);
-	});
-	//--- Handle update event ---------------------------------------------------
-	socket.on('update', function(){
-		socket.broadcast.emit('update');
-	});
-	//--- Handle disconnect event -----------------------------------------------
-	socket.on('disconnect', function(){
-		socket.broadcast.emit('update');
-	});
+    console.log('made socket connection', socket.id);
+    //--- Handle lock event -----------------------------------------------------
+    socket.on('lock', function (user) {
+        socket.broadcast.emit('lock', user);
+    });
+    //--- Handle update event ---------------------------------------------------
+    socket.on('update', function () {
+        socket.broadcast.emit('update');
+    });
+    //--- Handle disconnect event -----------------------------------------------
+    socket.on('disconnect', function () {
+        socket.broadcast.emit('update');
+    });
 });
 
 /*****************************************************************************
@@ -107,76 +112,75 @@ io.on('connection', (socket) => {
  *****************************************************************************/
 //--- Class that deals with Rights --------------------------------------------
 class Rights {
-  admin: boolean; // user is administrator
+    admin: boolean; // user is administrator
 
-  constructor(admin: boolean) {
-    this.admin = admin;
-  }
+    constructor(admin: boolean) {
+        this.admin = admin;
+    }
 }
+
 //--- checkRight, is there still a session and are the rights sufficient ------
-function checkRights(req: Request, res: Response, neededRights: Rights) : boolean {
+function checkRights(req: Request, res: Response, neededRights: Rights): boolean {
 
-  //--- check if session is existing ------------------------------------------
-  if (!req.session.rights) {
-    res.status(401);     // set HTTP response state
-    res.json({ message  : "No session: Please log in"  });  // send HTTP-response
-    return false;
-  }
-
-  //--- check rights against the needed rights (provided as parameter) --------
-  else  {
-    let rightsOK : boolean = true;
-    let message  : string  = "unsufficient rights";
-
-    // only login required
-    if(!neededRights.admin) return true;
-
-    if (neededRights.admin) {  // checks if "admin" is needed
-      rightsOK = rightsOK && req.session.rights.admin;
-      message += ": not logged in"
+    //--- check if session is existing ------------------------------------------
+    if (!req.session.rights) {
+        res.status(401);     // set HTTP response state
+        res.json({message: "No session: Please log in"});  // send HTTP-response
+        return false;
     }
 
-    if (! rightsOK) {
-      res.status(401);     // set HTTP response state
-      res.json({ message  : message });  // send HTTP-response
-      return false;
+    //--- check rights against the needed rights (provided as parameter) --------
+    else {
+        let rightsOK: boolean = true;
+        let message: string = "unsufficient rights";
+
+        // only login required
+        if (!neededRights.admin) return true;
+
+        if (neededRights.admin) {  // checks if "admin" is needed
+            rightsOK = rightsOK && req.session.rights.admin;
+            message += ": not logged in";
+        }
+
+        if (!rightsOK) {
+            res.status(401);     // set HTTP response state
+            res.json({message: message});  // send HTTP-response
+            return false;
+        }
     }
-  }
 
-  //--- return TRUE if everthing was o.k. --------------------------------------
-  return true;
-
+    //--- return TRUE if everthing was o.k. --------------------------------------
+    return true;
 }
 
 /*****************************************************************************
  ***  Middleware Routers for Parsing, Session- and Rights-Management         *
  *****************************************************************************/
 //--- parsing json -----------------------------------------------------------
-router.use( bodyParser.json() );
+router.use(bodyParser.json());
 
 router.use(function (req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
 });
 
-
 //--- session management -----------------------------------------------------
-router.use( session( {
-  // save session even if not modified
-  resave            : true,
-  // save session even if not used
-  saveUninitialized : true,
-  // forces cookie set on every response needed to set expiration (maxAge)
-  rolling           : true,
-  // name of the cookie set is set by the server
-  name              : "mySessionCookie",
-  // encrypt session-id in cookie using "secret" as modifier
-  secret            : "geheim",
-  // set some cookie-attributes. Here expiration-date (offset in ms)
-  cookie            : { maxAge: 10 * 60 * 1000 },
-} ) );
+router.use(session({
+    // save session even if not modified
+    resave: true,
+    // save session even if not used
+    saveUninitialized: true,
+    // forces cookie set on every response needed to set expiration (maxAge)
+    rolling: true,
+    // name of the cookie set is set by the server
+    name: "mySessionCookie",
+    // encrypt session-id in cookie using "secret" as modifier
+    secret: "geheim",
+    // set some cookie-attributes. Here expiration-date (offset in ms)
+    cookie: {maxAge: 10 * 60 * 1000},
+}));
 
 /*****************************************************************************
  ***  Dynamic Routers                                                        *
@@ -249,7 +253,6 @@ router.use( session( {
  *   ]
  * }
  */
-
 /**
  * --- check login with: post /login/check -----------------------------
  * @api        {post} /login/check check if user is logged in
@@ -269,14 +272,14 @@ router.use( session( {
  * { "message"  : "user Musterfrau still logged in",
  *   "username" : "Musterfrau"                            }
  */
-router.get    ("/apilogin/check", function (req: Request, res: Response) {
+router.get("/apilogin/check", function (req: Request, res: Response) {
 
-	//--- check Rights -> RETURN if not sufficient ------------------------------
-	if (!checkRights(req,res, new Rights (false))) {
-	  return;
-	}
+    //--- check Rights -> RETURN if not sufficient ------------------------------
+    if (!checkRights(req, res, new Rights(false))) {
+        return;
+    }
 
-	res.status(200).json({message: "user still logged in"});
+    res.status(200).json({message: "user still logged in"});
 });
 
 /**
@@ -291,39 +294,39 @@ router.get    ("/apilogin/check", function (req: Request, res: Response) {
  * @apiExample {url} Usage Example
  * http://localhost:8080/login
  */
-router.post   ("/apilogin",       function (req: Request, res: Response) {
-  let status   : number = 500;  // Initial HTTP response status
-  let message  : string = ""; // To be set
-  let username : string = req.body.username;
-  let password : string = req.body.password;
+router.post("/apilogin", function (req: Request, res: Response) {
+    let status: number = 500;  // Initial HTTP response status
+    let message: string = ""; // To be set
+    let username: string = req.body.username;
+    let password: string = req.body.password;
 
-  //---- ok -> check username/password in database and set Rights -------------
-  if (username != "" && password != "") { // there must be username and password
-    let query: Object = {username: username, password: cryptoJS.MD5(password).toString()};
-    userlistCollection.findOne(query).then((user:User) => {
-      if (user !== null) {
-        message = username + " logged in by username/password";
-        req.session.username = username;    // set session-variable username
-        // can be extended with database-queries using rows.id
-        req.session.rights = new Rights(user.isAdmin);
-        status = 200;
-      } else { // username and passwort does not match message = "Id " + id + " not found";
-        message = "Not Valid: user '" + username + "' does not match password";
-        status = 401;
-      }
-      res.status(status).json({message: message});
-    }).catch((error: MongoError) => { // database error
-      message = "Database error: " + error.code;
-      status = 505;
-      res.status(status).json({message: message});
-    });
-  }
-  //--- nok -------------------------------------------------------------------
-  else { // either username or password not provided
-    res.status(400).json({message: "Bad Request: not all mandatory parameters provided"});
-  }
-
+    //---- ok -> check username/password in database and set Rights -------------
+    if (username != "" && password != "") { // there must be username and password
+        let query: Object = {username: username, password: cryptoJS.MD5(password).toString()};
+        userlistCollection.findOne(query).then((user: User) => {
+            if (user !== null) {
+                message = username + " logged in by username/password";
+                req.session.username = username;    // set session-variable username
+                // can be extended with database-queries using rows.id
+                req.session.rights = new Rights(user.isAdmin);
+                status = 200;
+            } else { // username and passwort does not match message = "Id " + id + " not found";
+                message = "Not Valid: user '" + username + "' does not match password";
+                status = 401;
+            }
+            res.status(status).json({message: message});
+        }).catch((error: MongoError) => { // database error
+            message = "Database error: " + error.code;
+            status = 505;
+            res.status(status).json({message: message});
+        });
+    }
+    //--- nok -------------------------------------------------------------------
+    else { // either username or password not provided
+        res.status(400).json({message: "Bad Request: not all mandatory parameters provided"});
+    }
 });
+
 /**
  * --- logout with: post /logout ---------------------------------------
  * @api        {post} /login/check check if user is logged in
@@ -342,19 +345,18 @@ router.post   ("/apilogin",       function (req: Request, res: Response) {
  * { "message"  : "Musterfrau logout successfull",
  *   "username" : "Musterfrau"                            }
  */
-router.post   ("/apilogout",      function (req: Request, res: Response) {
+router.post("/apilogout", function (req: Request, res: Response) {
 
-  //--- check Rights -> RETURN if not sufficient ------------------------------
-  if (!checkRights(req,res, new Rights (false))) {
-    return;
-  }
+    //--- check Rights -> RETURN if not sufficient ------------------------------
+    if (!checkRights(req, res, new Rights(false))) {
+        return;
+    }
 
-  //--- ok -> delete session-variable and reset Rights ------------------------
-  let username : string = req.session.username;
-  req.session.username = null; // delete session-variable
-  req.session.rights   = null; // reset all Rights
-  res.status(200).json({message: username + " logout successfull"})
-
+    //--- ok -> delete session-variable and reset Rights ------------------------
+    let username: string = req.session.username;
+    req.session.username = null; // delete session-variable
+    req.session.rights = null; // reset all Rights
+    res.status(200).json({message: username + " logout successfull"});
 });
 
 /**
@@ -388,51 +390,49 @@ router.post   ("/apilogout",      function (req: Request, res: Response) {
  *
  * @apiUse BadRequest
  */
-router.post   ("/apiuser",        function (req: Request, res: Response) {
-  let username : string = (req.body.username ? req.body.username : "").trim();
-  let password : string = (req.body.password ? req.body.password : "").trim();
-  let vorname  : string = (req.body.vorname  ? req.body.vorname  : "").trim();
-  let nachname : string = (req.body.nachname ? req.body.nachname : "").trim();
-  let isAdmin  : boolean = req.body.isAdmin ? req.body.isAdmin : false;
-  let message  : string = "";
-  let status   : number = 500; // Initial HTTP response status
+router.post("/apiuser", function (req: Request, res: Response) {
+    let username: string = (req.body.username ? req.body.username : "").trim();
+    let password: string = (req.body.password ? req.body.password : "").trim();
+    let vorname: string = (req.body.vorname ? req.body.vorname : "").trim();
+    let nachname: string = (req.body.nachname ? req.body.nachname : "").trim();
+    let isAdmin: boolean = req.body.isAdmin ? req.body.isAdmin : false;
+    let message: string = "";
+    let status: number = 500; // Initial HTTP response status
 
-  //--- check Rights -> RETURN if not sufficient ------------------------------
-  if (!checkRights(req, res, new Rights(true))) {
-    return;
-  }
+    //--- check Rights -> RETURN if not sufficient ------------------------------
+    if (!checkRights(req, res, new Rights(true))) {
+        return;
+    }
 
-  console.log(req.session.username);
+    //-- ok -> insert user-data into database -----------------------------------
+    if ((username != "") && (vorname != "") && (nachname != "")) {
 
-  //-- ok -> insert user-data into database -----------------------------------
-  if ((username != "") && (vorname != "") && (nachname != "")) {
-
-    let insertData = {
-      time     : new Date().toLocaleString(),
-      username : username,
-      vorname  : vorname,
-      nachname : nachname,
-      password : cryptoJS.MD5(password).toString(),
-      isAdmin: isAdmin
-    };
-    userlistCollection.insertOne(insertData)
-      .then((result: InsertOneWriteOpResult) => {
-        message = "Created: " + vorname + " " + nachname;
-        status = 201;
-        res.status(status).json({message: message});
-      })
-      .catch((error : MongoError) => {
-        message = "Database error: " + error.code;
-        status = 505;
-        res.status(status).json({message: message});
-      });
-  }
-  //--- nok -------------------------------------------------------------------
-  else { // some parameters are not provided
-    res.status(400).json({message: "Bad Request: not all mandatory parameters provided"});
-  }
-
+        let insertData = {
+            time: new Date().toLocaleString(),
+            username: username,
+            vorname: vorname,
+            nachname: nachname,
+            password: cryptoJS.MD5(password).toString(),
+            isAdmin: isAdmin
+        };
+        userlistCollection.insertOne(insertData)
+            .then(() => {
+                message = "Created: " + vorname + " " + nachname;
+                status = 201;
+                res.status(status).json({message: message});
+            })
+            .catch((error: MongoError) => {
+                message = "Database error: " + error.code;
+                status = 505;
+                res.status(status).json({message: message});
+            });
+    }
+    //--- nok -------------------------------------------------------------------
+    else { // some parameters are not provided
+        res.status(400).json({message: "Bad Request: not all mandatory parameters provided"});
+    }
 });
+
 /**
  * --- get user with /user/:id -----------------------------------------
  * @api        {get} /user/:id Read User information
@@ -465,37 +465,39 @@ router.post   ("/apiuser",        function (req: Request, res: Response) {
  * @apiUse NotFound
  * @apiUse Gone
  */
-router.get    ("/apiuser/:id",    function (req: Request, res: Response) {
-  let status   : number = 500; // Initial HTTP response status
-  let message  : string = "";  // To be set
-  let id       : string = req.params.id;
+router.get("/apiuser/:id", function (req: Request, res: Response) {
+    let status: number = 500; // Initial HTTP response status
+    let message: string = "";  // To be set
+    let id: string = req.params.id;
 
-  //--- check Rights -> RETURN if not sufficient ------------------------------
-  if (!checkRights(req,res, new Rights (false))) { return; }
+    //--- check Rights -> RETURN if not sufficient ------------------------------
+    if (!checkRights(req, res, new Rights(false))) {
+        return;
+    }
 
-  //--- ok -> get user from database ------------------------------------------
-  let query:Object = {_id: new ObjectID(id)};
-  userlistCollection.findOne(query)
-    .then((user: User) => {
-      if (user !== null) {
-      	user['id'] = user['_id'];
-      	user['_id'] = undefined;
-        message = "Selected item is " + user.vorname + " " + user.nachname;
-        status = 200;
-        res.status(status).json({user: user, message: message});
-      } else {
-        message = "Id " + id + " not found";
-        status = 404;
-        res.status(status).json({user: user, message: message});
-      }
-    })
-    .catch((error: MongoError) => {
-      message = "Database error: " + error.code;
-      status = 505;
-      res.status(status).json({user: null, message: message});
-    });
-
+    //--- ok -> get user from database ------------------------------------------
+    let query: Object = {_id: new ObjectID(id)};
+    userlistCollection.findOne(query)
+        .then((user: User) => {
+            if (user !== null) {
+                user['id'] = user['_id'];
+                user['_id'] = undefined;
+                message = "Selected item is " + user.vorname + " " + user.nachname;
+                status = 200;
+                res.status(status).json({user: user, message: message});
+            } else {
+                message = "Id " + id + " not found";
+                status = 404;
+                res.status(status).json({user: user, message: message});
+            }
+        })
+        .catch((error: MongoError) => {
+            message = "Database error: " + error.code;
+            status = 505;
+            res.status(status).json({user: null, message: message});
+        });
 });
+
 /**
  * --- update user with: put /user/:id ---------------------------------
  * @api        {put} /user/:id Update user
@@ -534,48 +536,49 @@ router.get    ("/apiuser/:id",    function (req: Request, res: Response) {
  * @apiUse NotFound
  * @apiUse Gone
  */
-router.put    ("/apiuser/:id",    function (req: Request, res: Response) {
-  let status      : number = 500; // Initial HTTP response status
-  let message     : string = ""; // To be set
-  let updateData  : any = {}; // No type provided - depends on existence of password
-  let query       : any = {};
+router.put("/apiuser/:id", function (req: Request, res: Response) {
+    let status: number = 500; // Initial HTTP response status
+    let message: string = ""; // To be set
+    let updateData: any = {}; // No type provided - depends on existence of password
 
-  //--- check Rights -> RETURN if not sufficient ------------------------------
-  if (!checkRights(req,res, new Rights (true))) { return; }
+    //--- check Rights -> RETURN if not sufficient ------------------------------
+    if (!checkRights(req, res, new Rights(true))) {
+        return;
+    }
 
-  //--- check if parameters exists -> initialize each if not ------------------
-  let id       : number = (req.params.id     ? req.params.id     : -1);
-  let vorname  : string = (req.body.vorname  ? req.body.vorname  : "").trim();
-  let nachname : string = (req.body.nachname ? req.body.nachname : "").trim();
-  let password : string = (req.body.password ? req.body.password : "").trim();
+    //--- check if parameters exists -> initialize each if not ------------------
+    let id: number = (req.params.id ? req.params.id : -1);
+    let vorname: string = (req.body.vorname ? req.body.vorname : "").trim();
+    let nachname: string = (req.body.nachname ? req.body.nachname : "").trim();
+    let password: string = (req.body.password ? req.body.password : "").trim();
 
-  //--- ok -> update user with new attributes ---------------------------------
-  query = {_id: new ObjectID(id)};
-  if (password == "") { // no new password set
-    updateData = { vorname: vorname, nachname: nachname };
-  } else { // new password set
-    updateData = { password: cryptoJS.MD5(password).toString(), vorname: vorname, nachname: nachname };
-  }
+    //--- ok -> update user with new attributes ---------------------------------
+    let query = {_id: new ObjectID(id)};
+    if (password == "") { // no new password set
+        updateData = {vorname: vorname, nachname: nachname};
+    } else { // new password set
+        updateData = {password: cryptoJS.MD5(password).toString(), vorname: vorname, nachname: nachname};
+    }
 
-  userlistCollection.updateOne(query, {$set: updateData})
-    .then((result: UpdateWriteOpResult) => {
-      if (result.matchedCount === 1) {
-        message = vorname + " " + nachname + " successfully updated";
-        status = 201;
-        res.status(status).json({message: message});
-      } else {
-        message = "Not Valid: Id " + id + " not valid";
-        status = 500;
-        res.status(status).json({message: message});
-      }
-      })
-    .catch((error: MongoError) => {
-      message = "Database error: " + error.code;
-      status = 505;
-      res.status(status).json({message: message});
-    });
-
+    userlistCollection.updateOne(query, {$set: updateData})
+        .then((result: UpdateWriteOpResult) => {
+            if (result.matchedCount === 1) {
+                message = vorname + " " + nachname + " successfully updated";
+                status = 201;
+                res.status(status).json({message: message});
+            } else {
+                message = "Not Valid: Id " + id + " not valid";
+                status = 500;
+                res.status(status).json({message: message});
+            }
+        })
+        .catch((error: MongoError) => {
+            message = "Database error: " + error.code;
+            status = 505;
+            res.status(status).json({message: message});
+        });
 });
+
 /**
  * --- delete user with /user/:id --------------------------------------
  * @api        {delete} /user/:id Delete User
@@ -607,65 +610,63 @@ router.put    ("/apiuser/:id",    function (req: Request, res: Response) {
  * @apiUse Gone
  * @apiUse Forbidden
  */
-router.delete ("/apiuser/:id",    function (req: Request, res: Response) {
-  let status    : number = 500; // Initial HTTP response status
-  let message   : string = "";  // To be set
-  let id        : number = (req.body.id != "" ? req.params.id: -1);
+router.delete("/apiuser/:id", function (req: Request, res: Response) {
+    let status: number = 500; // Initial HTTP response status
+    let message: string = "";  // To be set
+    let id: number = (req.body.id != "" ? req.params.id : -1);
 
-  //--- check Rights -> RETURN if not sufficient ------------------------------
-  if (!checkRights(req,res, new Rights (true))) {
-    return;
-  }
-
-  //--- ok -> delete user from database ---------------------------------------
-  let deleteData: [number] = [id];
-  let query = {_id: new ObjectID(id)};
-
-  userlistCollection.findOne(query)
-  .then((res) => {
-    if (res["username"] == 'admin') {
-      return Promise.reject<DeleteWriteOpResultObject>(new Error("Cannot delete admin."))
-    } else {
-      return userlistCollection.deleteOne(query)
+    //--- check Rights -> RETURN if not sufficient ------------------------------
+    if (!checkRights(req, res, new Rights(true))) {
+        return;
     }
-  })
-  .then((result: DeleteWriteOpResultObject) => {
-    if (result.deletedCount === 1) {
-      message = "ID " + id + " successfully deleted";
-      status = 200;
-    } else {
-      message = "Id " + id + " not found";
-      status = 404;
-    }
-    res.status(status).json({message: message});
-  }).catch((error: Error) => { // database error
-    message = "Database error: " + error;
-    status = 505;
-    res.status(status).json({message: message});
-  });
-});
 
-router.get("/apiusers", function(req: Request, res: Response) {
-  if (!checkRights(req,res, new Rights (false))) {
-    return;
-  }
+    //--- ok -> delete user from database ---------------------------------------
+    let query = {_id: new ObjectID(id)};
 
-  let query: Object = {};
-  userlistCollection.find(query).toArray()
-    .then((users: User[]) => {
-      users = users.map((user) => {
-        user['id'] = user['_id'];
-        user['_id'] = undefined;
-        user['password'] = undefined;
-        return user;
-      })
-      res.status(200).json({message: "fetched users", users: users});
-    })
-    .catch((error: MongoError) => {
-      res.status(500).json({message: "Database error" + error.code});
+    userlistCollection.findOne(query)
+        .then((res) => {
+            if (res["username"] == 'admin') {
+                return Promise.reject<DeleteWriteOpResultObject>(new Error("Cannot delete admin."));
+            } else {
+                return userlistCollection.deleteOne(query);
+            }
+        })
+        .then((result: DeleteWriteOpResultObject) => {
+            if (result.deletedCount === 1) {
+                message = "ID " + id + " successfully deleted";
+                status = 200;
+            } else {
+                message = "Id " + id + " not found";
+                status = 404;
+            }
+            res.status(status).json({message: message});
+        }).catch((error: Error) => { // database error
+        message = "Database error: " + error;
+        status = 505;
+        res.status(status).json({message: message});
     });
 });
 
+router.get("/apiusers", function (req: Request, res: Response) {
+    if (!checkRights(req, res, new Rights(false))) {
+        return;
+    }
+
+    let query: Object = {};
+    userlistCollection.find(query).toArray()
+        .then((users: User[]) => {
+            users = users.map((user) => {
+                user['id'] = user['_id'];
+                user['_id'] = undefined;
+                user['password'] = undefined;
+                return user;
+            });
+            res.status(200).json({message: "fetched users", users: users});
+        })
+        .catch((error: MongoError) => {
+            res.status(500).json({message: "Database error" + error.code});
+        });
+});
 
 router.use("/", express.static(__dirname + "/dist"));
 
