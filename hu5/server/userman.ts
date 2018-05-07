@@ -304,6 +304,10 @@ router.post("/apilogin", function (req: Request, res: Response) {
     if (username != "" && password != "") { // there must be username and password
         let query: Object = {username: username, password: cryptoJS.MD5(password).toString()};
         userlistCollection.findOne(query).then((user: User) => {
+            // if(user.isAdmin) {
+            //     res.redirect('/dashboard');
+            //     return;
+            // }
             if (user !== null) {
                 message = username + " logged in by username/password";
                 req.session.username = username;    // set session-variable username
@@ -314,7 +318,7 @@ router.post("/apilogin", function (req: Request, res: Response) {
                 message = "Not Valid: user '" + username + "' does not match password";
                 status = 401;
             }
-            res.status(status).json({message: message});
+            res.status(status).json({message: message, user: user});
         }).catch((error: MongoError) => { // database error
             message = "Database error: " + error.code;
             status = 505;

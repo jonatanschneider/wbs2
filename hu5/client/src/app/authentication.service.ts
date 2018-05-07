@@ -11,14 +11,14 @@ export class AuthenticationService {
   user: BehaviorSubject<User>;
 
   constructor(private httpClient: HttpClient) {
-    if (window.localStorage.getItem('user')) {
+    if (window.localStorage.getItem('isLoggedin')) {
       this.user = new BehaviorSubject<User>(new User());
     } else {
       this.user = new BehaviorSubject<User>(undefined);
     }
     this.isUserLoggedIn().subscribe(result => {
       if (result) {
-        this.setLocalStorageLogin(true);
+        this.setLocalStorageLogin(true, false);
         // TODO: add username here, not delivered by server
         this.user.next(new User());
       }
@@ -32,8 +32,11 @@ export class AuthenticationService {
     }, {observe: 'response'})
       .map(response => {
         if (response.status === 200) {
-          this.setLocalStorageLogin(true);
+          this.setLocalStorageLogin(true, response.body['user'].isAdmin);
           this.user.next(new User(username));
+          if(response.body['user'].isAdmin) {
+            window.location.href = 'http://localhost:8080/dashboard/';
+          }
           return true;
         } else {
           this.user.next(undefined);
@@ -47,7 +50,7 @@ export class AuthenticationService {
   logout(): Observable<boolean> {
     return this.httpClient.post('/apilogout', {}, {observe: 'response'})
       .map(response => {
-        this.setLocalStorageLogin(false);
+        this.setLocalStorageLogin(false, false);
         if (response.status === 200) {
           this.user.next(undefined);
           return true;
@@ -63,11 +66,16 @@ export class AuthenticationService {
       })
   }
 
-  private setLocalStorageLogin(isLoggedIn: boolean): void {
+  private setLocalStorageLogin(isLoggedIn: boolean, isAdmin: boolean): void {
     if (isLoggedIn) {
-      window.localStorage.setItem('user', 'pimmel');
+      window.localStorage.setItem('isLoggedin', 'pimmel');
     } else {
-      window.localStorage.removeItem('user');
+      window.localStorage.removeItem('isLoggedin');
+    }
+    if(isAdmin){
+      window.localStorage.setItem('isAdmin', "nase");
+    } else{
+      window.localStorage.removeItem('isAdmin');
     }
   }
 

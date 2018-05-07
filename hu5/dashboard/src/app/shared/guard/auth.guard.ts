@@ -7,11 +7,11 @@ export class AuthGuard implements CanActivate {
     constructor(private router: Router) {}
 
     canActivate() {
-        if (localStorage.getItem('isLoggedin')) {
+        if (localStorage.getItem('isAdmin')) {
             return true;
         }
 
-        this.router.navigate(['/login']);
+        window.location.href = 'http://localhost:8080/client/';
         return false;
     }
 }
