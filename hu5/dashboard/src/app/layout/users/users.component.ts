@@ -47,7 +47,7 @@ export class UsersComponent implements OnInit {
     }
 
     editUser(user: User) {
-        this.location.go('/users/' + user.id);
+        this.location.go('/users/edit/' + user.id);
         const modalReference = this.modalService.open(EditComponent);
         modalReference.componentInstance.setUser(user);
         modalReference.result
