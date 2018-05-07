@@ -5,7 +5,7 @@
     "scripts": {
         "ng": "ng",
         "start": "ng serve",
-        "build": "ng build --op ../server/dist/dashboard --watch",
+        "build": "ng build --output-path ../server/dist/dashboard --watch",
         "gitbuild": "ng build --prod --base-href /start-angular/SB-Admin-BS4-Angular-5/master/dist/",
         "test": "ng test",
         "lint": "ng lint",
