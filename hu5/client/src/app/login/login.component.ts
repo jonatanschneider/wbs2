@@ -29,6 +29,7 @@ export class LoginComponent implements OnInit {
     } else if (this.password) {
       this.authenticationService.login(this.username, this.password).subscribe(user => {
         if (user) {
+          // ToDo: Check user rights, redirect to /dashboard if admin
           this.notificationService.success('Successfully logged in');
         } else {
           this.notificationService.danger('Login failed');

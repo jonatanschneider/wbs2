@@ -5,22 +5,11 @@
   </button>
 </div>
 <div class="modal-body">
-  <form (submit)="save()">
-    <div class="form-group">
-      <label for="vorname">First name</label>
-      <input type="text" class="form-control" id="vorname" [(ngModel)]="user.vorname" name="vorname" required>
-    </div>
-    <div class="form-group">
-      <label for="nachname">Last name</label>
-      <input type="text" class="form-control" id="nachname" [(ngModel)]="user.nachname" name="nachname" required>
-    </div>
-    <div class="form-group">
-      <label for="password">Password (optional)</label>
-      <input type="password" class="form-control" id="password" [(ngModel)]="user.password" name="password">
-    </div>
-  </form>
+  <p><span class="lead">Username:</span> {{user.username}}</p>
+  <p><span class="lead">First name:</span> {{user.vorname}}</p>
+  <p><span class="lead">Last name:</span> {{user.nachname}}</p>
+  <p><span class="lead">Id:</span> {{user.id}}</p>
 </div>
 <div class="modal-footer">
   <button type="button" class="btn btn-outline-danger" (click)="close()">Close</button>
-  <button type="submit" class="btn btn-success" (click)="save()">Save</button>
 </div>
