@@ -1,0 +1,19 @@
+<form (submit)="add()">
+  <div class="form-group">
+    <label for="username">Username</label>
+    <input type="text" class="form-control" id="username" [(ngModel)]="username" name="username" required>
+  </div>
+  <div class="form-group">
+    <label for="vorname">First name</label>
+    <input type="text" class="form-control" id="vorname" [(ngModel)]="vorname" name="vorname" required>
+  </div>
+  <div class="form-group">
+    <label for="nachname">Last name</label>
+    <input type="text" class="form-control" id="nachname" [(ngModel)]="nachname" name="nachname" required>
+  </div>
+  <div class="form-group">
+    <label for="password">Password</label>
+    <input type="password" class="form-control" id="password" [(ngModel)]="password" name="password" required>
+  </div>
+  <button type="submit" class="btn btn-success">Add</button>
+</form>
