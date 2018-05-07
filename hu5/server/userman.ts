@@ -668,7 +668,14 @@ router.get("/apiusers", function (req: Request, res: Response) {
         });
 });
 
-router.use("/", express.static(__dirname + "/dist"));
+router.get("/", function (req: Request, res: Response) {
+    res.redirect("/client/");
+});
 
-// Routen innerhalb der Angular-Anwendung zurückleiten
-router.use("/*", express.static(__dirname + "/dist"));
+router.use("/dashboard/", express.static(__dirname + "/dist/dashboard"));
+
+router.use("/dashboard/*", express.static(__dirname + "/dist/dashboard"));
+
+router.use("/client/", express.static(__dirname + "/dist/client"));
+
+router.use("/client/*", express.static(__dirname + "/dist/client"));
