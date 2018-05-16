@@ -1,0 +1,30 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "Lukas Kimpel",
+  "license": "ISC",
+  "dependencies": {
+    "@types/express": "^4.11.1",
+    "@types/express-session": "^1.15.8",
+    "@types/jquery": "^3.3.1",
+    "@types/passport": "^0.4.5",
+    "@types/passport-facebook": "^2.1.8",
+    "@types/passport-twitter": "^1.0.34",
+    "bootstrap": "^4.1.1",
+    "express": "^4.16.3",
+    "express-session": "^1.15.6",
+    "font-awesome": "^4.7.0",
+    "jquery": "^3.3.1",
+    "passport": "~0.3.2",
+    "passport-facebook": "~2.1.1",
+    "passport-google-oauth20": "^1.0.0",
+    "passport-instagram": "^1.0.0",
+    "passport-twitter": "~1.0.4"
+  }
+}
