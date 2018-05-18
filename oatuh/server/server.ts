@@ -7,6 +7,9 @@ import * as session from 'express-session';
 import * as passport from 'passport';
 import { Profile } from 'passport';
 import * as pFacebook from 'passport-facebook';
+import * as pTwitter from 'passport-twitter';
+import * as pInstagram from 'passport-instagram';
+import * as pGoogle from 'passport-google-oauth20';
 
 import * as request from 'request-promise';
 
@@ -64,24 +67,56 @@ interface iFacebookAuth extends iAuth {
 	clientSecret: string
 }
 
+interface iInstagramAuth extends iAuth {
+	clientID: string,
+	clientSecret: string
+}
+
+interface iTwitterAuth extends iAuth {
+	consumerKey: string,
+	consumerSecret: string
+}
+
+interface iGoogleAuth extends iAuth {
+	clientID: string,
+	clientSecret: string
+}
+
 //--- Store authentification credentials in a class ---------------------------
 class AuthConfig {
+	// ToDo: Insert authentication data here
 	facebookAuth: iFacebookAuth = {
 		clientID: '',                  // your App ID
 		clientSecret: '', // your App Secret
 		callbackURL: 'https://localhost:8443/auth/facebook/callback'
 	};
+	twitterAuth: iTwitterAuth = {
+		consumerKey: '',
+		consumerSecret: '',
+		callbackURL: 'https://localhost:8443/auth/twitter/callback'
+	};
+	instagramAuth: iInstagramAuth = {
+		clientID: '',
+		clientSecret: '',
+		callbackURL: 'https://localhost:8443/auth/instagram/callback'
+	};
+	googleAuth: iGoogleAuth = {
+		clientID: '',
+		clientSecret: '',
+		callbackURL: 'https://localhost:8443/auth/google/callback'
+	}
 }
 
 let configAuth: AuthConfig = new AuthConfig();
 
 //--- Strategies  -------------------------------------------------------------
 let FacebookStrategy = pFacebook.Strategy;
-/*
-let TwitterStrategy   = pTwitter.Strategy;
+
+let TwitterStrategy = pTwitter.Strategy;
+
 let InstagramStrategy = pInstagram.Strategy;
+
 let GoogleStrategy    = pGoogle.Strategy;
-*/
 
 //--- FACEBOOK ----------------------------------------------------------------
 passport.use(new FacebookStrategy({
@@ -118,6 +153,91 @@ passport.use(new FacebookStrategy({
 	}
 ));
 
+//--- TWITTER ----------------------------------------------------------------
+passport.use(new TwitterStrategy({
+	consumerKey: configAuth.twitterAuth.consumerKey,
+	consumerSecret: configAuth.twitterAuth.consumerSecret,
+	callbackURL: configAuth.twitterAuth.callbackURL,
+	passReqToCallback: true
+}, function (req, accessToken, refreshToken, profile, done) {
+// set up parameters of Graph-API request
+	const options = {
+		method: 'GET',
+		uri: 'https://api.twitter.com/1.1/account/settings.json',
+		qs: {
+			access_token: accessToken,
+			fields: 'email, picture, gender, first_name, last_name'
+		}
+	};
+	request(options).then(twRes => {
+		let parsedRes = JSON.parse(twRes);
+		profile.emails = [{value: parsedRes.email}];
+		profile.photos = [{value: parsedRes.picture.data.url}];
+		profile.gender = parsedRes.gender;
+		profile.name.givenName = parsedRes.first_name;
+		profile.name.familyName = parsedRes.last_name;
+		done(null, profile);
+	})
+		.catch((err) => {
+			console.log('Error: ' + err);
+		});
+}));
+
+//--- INSTAGRAM ----------------------------------------------------------------
+passport.use(new InstagramStrategy({
+	clientID: configAuth.instagramAuth.clientID,
+	clientSecret: configAuth.instagramAuth.clientSecret,
+	callbackURL: configAuth.instagramAuth.callbackURL,
+}, function (req, accessToken, refreshToken, profile, done) {
+	const options = {
+		method: 'GET',
+		uri: 'https://api.instagram.com/v1/users/self/',
+		qs: {
+			access_token: accessToken,
+			fields: 'email, picture, gender, first_name, last_name'
+		}
+	};
+	request(options).then(igRes => {
+		let parsedRes = JSON.parse(igRes);
+		profile.emails = [{value: parsedRes.email}];
+		profile.photos = [{value: parsedRes.picture.data.url}];
+		profile.gender = parsedRes.gender;
+		profile.name.givenName = parsedRes.first_name;
+		profile.name.familyName = parsedRes.last_name;
+		done(null, profile);
+	})
+		.catch((err) => {
+			console.log('Error: ' + err);
+		});
+}));
+
+//--- GOOGLE ----------------------------------------------------------------
+passport.use(new InstagramStrategy({
+	clientID: configAuth.googleAuth.clientID,
+	clientSecret: configAuth.googleAuth.clientSecret,
+	callbackURL: configAuth.googleAuth.callbackURL,
+}, function (req, accessToken, refreshToken, profile, done) {
+	const options = {
+		method: 'GET',
+		uri: 'https://www.googleapis.com/auth/plus.me',
+		qs: {
+			access_token: accessToken,
+			fields: 'email, picture, gender, first_name, last_name'
+		}
+	};
+	request(options).then(igRes => {
+		let parsedRes = JSON.parse(igRes);
+		profile.emails = [{value: parsedRes.email}];
+		profile.photos = [{value: parsedRes.picture.data.url}];
+		profile.gender = parsedRes.gender;
+		profile.name.givenName = parsedRes.first_name;
+		profile.name.familyName = parsedRes.last_name;
+		done(null, profile);
+	})
+		.catch((err) => {
+			console.log('Error: ' + err);
+		});
+}));
 
 /*****************************************************************************
  *** route middleware to make sure a user is logged in                       *
@@ -182,6 +302,45 @@ router.get('/auth/facebook',
 );
 router.get('/auth/facebook/callback',
 	passport.authenticate('facebook', {
+		successRedirect: '/profile',
+		failureRedirect: '/'
+	})
+);
+
+//--- TWITTER routes ---------------------------------------------------------
+router.get('/auth/twitter',
+	passport.authenticate('twitter', {
+		scope: ['public_profile', 'email']
+	})
+);
+router.get('/auth/twitter/callback',
+	passport.authenticate('twitter', {
+		successRedirect: '/profile',
+		failureRedirect: '/'
+	})
+);
+
+//--- INSTAGRAM routes ---------------------------------------------------------
+router.get('/auth/instagram',
+	passport.authenticate('instagram', {
+		scope: ['basic']
+	})
+);
+router.get('/auth/instagram/callback',
+	passport.authenticate('instagram', {
+		successRedirect: '/profile',
+		failureRedirect: '/'
+	})
+);
+
+//--- GOOGLE routes ---------------------------------------------------------
+router.get('/auth/google',
+	passport.authenticate('google', {
+		scope: ['basic']
+	})
+);
+router.get('/auth/google/callback',
+	passport.authenticate('google', {
 		successRedirect: '/profile',
 		failureRedirect: '/'
 	})
