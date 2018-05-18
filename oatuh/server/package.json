@@ -1,0 +1,22 @@
+{
+  "name": "node-authentication-server",
+  "main": "server.js",
+  "dependencies": {
+    "@types/express": "^4.11.1",
+    "@types/express-session": "^1.15.8",
+    "@types/passport": "^0.4.5",
+    "@types/passport-facebook": "^2.1.8",
+    "@types/passport-twitter": "^1.0.34",
+    "@types/request": "^2.47.0",
+    "@types/request-promise": "^4.1.41",
+    "express": "^4.16.3",
+    "express-session": "^1.15.6",
+    "passport": "~0.3.2",
+    "passport-facebook": "~2.1.1",
+    "passport-google-oauth20": "^1.0.0",
+    "passport-instagram": "^1.0.0",
+    "passport-twitter": "~1.0.4",
+    "request": "^2.86.0",
+    "request-promise": "^4.2.2"
+  }
+}
