@@ -2,6 +2,8 @@ import * as express from 'express';
 import session = require('express-session');
 import * as passport from 'passport';
 import * as pGoogle from 'passport-google-oauth20';
+import * as pTwitter from 'passport-twitter';
+import * as pInstagram from 'passport-instagram';
 import { Profile } from 'passport';
 
 let router = express();
@@ -64,6 +66,22 @@ router.get('/auth/google/callback', passport.authenticate('google', {
 	failureRedirect: '/'
 }));
 
+router.get('/auth/twitter', passport.authenticate('twitter'));
+
+router.get('/auth/twitter/callback', passport.authenticate('twitter', {
+	successRedirect: '/profile',
+	failureRedirect: '/'
+}));
+
+router.get('/auth/instagram', passport.authenticate('instagram', {
+	scope: ['basic']
+}));
+
+router.get('/auth/instagram/callback', passport.authenticate('instagram', {
+    successRedirect: '/profile',
+	failureRedirect: '/'
+}));
+
 function isLoggedIn(req, res, next) {
 	console.log('A login check will be performed');
 	if (req.isAuthenticated()) {
@@ -83,6 +101,28 @@ passport.use(new GoogleStrategy({
 		passReqToCallback: true
 	},
 	function (req, accessToken, refreshToken, profile, done) {
+		done(null, profile);
+	}));
+
+let TwitterStrategy = pTwitter.Strategy;
+passport.use(new TwitterStrategy({
+		consumerKey: '',
+		consumerSecret: '',
+		callbackURL: 'http://localhost:8080/auth/twitter/callback',
+		passReqToCallback: true
+	},
+	function (req, token, tokenSecret, profile, done) {
+		done(null, profile);
+    }));
+
+let InstagramStrategy = pInstagram.Strategy;
+passport.use(new InstagramStrategy({
+		clientID: '',
+		clientSecret: '',
+		callbackURL: 'http://localhost:8080/auth/instagram/callback',
+		passReqToCallback: true
+	},
+	function(req, res, accessToken, refreshToken, profile, done) {
 		done(null, profile);
 	}));
 
