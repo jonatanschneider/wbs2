@@ -26,4 +26,16 @@ function renderProfile(user) {
 
 $(function () {
     showProfileData();
+
+    $('#postButton').on('click', () => {
+       $.ajax({
+           url: 'https://localhost:8443/createPost',
+           type: 'POST',
+           data: "input="+$('#postInput').val(),
+           dataType: 'json',
+           success: () => $('#postInput').text(''), /*TODO get id from created post and add to list below */
+           error: (jqXHR) => console.log(jqXHR)
+       });
+    });
+
 });

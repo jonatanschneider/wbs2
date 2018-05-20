@@ -16,6 +16,7 @@ import * as request from 'request-promise';
 import * as fs from 'fs';
 import * as http from 'http';
 import * as https from 'https';
+import bodyParser = require('body-parser');
 
 /*****************************************************************************
  ***  Create servers with handler function and start it                      *
@@ -152,7 +153,7 @@ passport.use(new FacebookStrategy({
 			});
 	}
 ));
-
+/*
 //--- TWITTER ----------------------------------------------------------------
 passport.use(new TwitterStrategy({
 	consumerKey: configAuth.twitterAuth.consumerKey,
@@ -161,8 +162,8 @@ passport.use(new TwitterStrategy({
 	passReqToCallback: true
 }, function (req, token, tokenSecret, profile, done) {
 	done(null, profile);
-}));
-
+}));*/
+/*
 //--- INSTAGRAM ----------------------------------------------------------------
 passport.use(new InstagramStrategy({
 	clientID: configAuth.instagramAuth.clientID,
@@ -190,7 +191,8 @@ passport.use(new InstagramStrategy({
 			console.log('Error: ' + err);
 		});
 }));
-
+*/
+/*
 //--- GOOGLE ----------------------------------------------------------------
 passport.use(new GoogleStrategy({
 	clientID: configAuth.googleAuth.clientID,
@@ -212,7 +214,7 @@ passport.use(new GoogleStrategy({
 			console.log('Error: ' + err);
 		});
 }));
-
+*/
 /*****************************************************************************
  *** route middleware to make sure a user is logged in                       *
  *****************************************************************************/
@@ -316,3 +318,12 @@ router.get('/auth/google/callback',
 		failureRedirect: '/'
 	})
 );
+
+router.use(bodyParser.urlencoded({
+	extended: true
+}));
+
+router.post('/createPost', function(req, res) {
+	console.log(req.body.input);
+	//TODO Facebook Graph-API access
+});
