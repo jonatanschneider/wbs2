@@ -159,28 +159,8 @@ passport.use(new TwitterStrategy({
 	consumerSecret: configAuth.twitterAuth.consumerSecret,
 	callbackURL: configAuth.twitterAuth.callbackURL,
 	passReqToCallback: true
-}, function (req, accessToken, refreshToken, profile, done) {
-// set up parameters of Graph-API request
-	const options = {
-		method: 'GET',
-		uri: 'https://api.twitter.com/1.1/account/settings.json',
-		qs: {
-			access_token: accessToken,
-			fields: 'email, picture, gender, first_name, last_name'
-		}
-	};
-	request(options).then(twRes => {
-		let parsedRes = JSON.parse(twRes);
-		profile.emails = [{value: parsedRes.email}];
-		profile.photos = [{value: parsedRes.picture.data.url}];
-		profile.gender = parsedRes.gender;
-		profile.name.givenName = parsedRes.first_name;
-		profile.name.familyName = parsedRes.last_name;
-		done(null, profile);
-	})
-		.catch((err) => {
-			console.log('Error: ' + err);
-		});
+}, function (req, token, tokenSecret, profile, done) {
+	done(null, profile);
 }));
 
 //--- INSTAGRAM ----------------------------------------------------------------
@@ -302,11 +282,8 @@ router.get('/auth/facebook/callback',
 );
 
 //--- TWITTER routes ---------------------------------------------------------
-router.get('/auth/twitter',
-	passport.authenticate('twitter', {
-		scope: ['public_profile', 'email']
-	})
-);
+router.get('/auth/twitter', passport.authenticate('twitter'));
+
 router.get('/auth/twitter/callback',
 	passport.authenticate('twitter', {
 		successRedirect: '/profile',
