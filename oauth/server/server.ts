@@ -212,7 +212,7 @@ passport.use(new InstagramStrategy({
 }));
 
 //--- GOOGLE ----------------------------------------------------------------
-passport.use(new InstagramStrategy({
+passport.use(new GoogleStrategy({
 	clientID: configAuth.googleAuth.clientID,
 	clientSecret: configAuth.googleAuth.clientSecret,
 	callbackURL: configAuth.googleAuth.callbackURL,
@@ -225,13 +225,7 @@ passport.use(new InstagramStrategy({
 			fields: 'email, picture, gender, first_name, last_name'
 		}
 	};
-	request(options).then(igRes => {
-		let parsedRes = JSON.parse(igRes);
-		profile.emails = [{value: parsedRes.email}];
-		profile.photos = [{value: parsedRes.picture.data.url}];
-		profile.gender = parsedRes.gender;
-		profile.name.givenName = parsedRes.first_name;
-		profile.name.familyName = parsedRes.last_name;
+	request(options).then(() => {
 		done(null, profile);
 	})
 		.catch((err) => {
@@ -336,7 +330,7 @@ router.get('/auth/instagram/callback',
 //--- GOOGLE routes ---------------------------------------------------------
 router.get('/auth/google',
 	passport.authenticate('google', {
-		scope: ['basic']
+		scope: ['profile', 'email']
 	})
 );
 router.get('/auth/google/callback',
