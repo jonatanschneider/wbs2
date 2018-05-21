@@ -2,39 +2,43 @@
 <!doctype html>
 <html>
 <head>
-	<title>Please log in using one of the following social media accounts.</title>
-	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
-	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
-	<!-- unset webStorm-preference: Editor -> inspections -> HTML -> File reference problems  -->
-	<script language="javascript" type="text/javascript" src="/jquery/jquery.min.js"></script>
-	<script language="javascript" type="text/javascript" src="/client/client.js"></script>
+    <title>Please log in using one of the following social media accounts.</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css"
+          integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
+    <!-- unset webStorm-preference: Editor -> inspections -> HTML -> File reference problems  -->
+    <script language="javascript" type="text/javascript" src="/jquery/jquery.min.js"></script>
+    <script language="javascript" type="text/javascript" src="/client/client.js"></script>
 </head>
 <body>
 <div class="container">
-	<div class="card mx-auto mt-5" style="width:200px">
-		<img id="profile_photo" class="card-img-top" src="http://placehold.it/380x500" alt="Card image">
-		<div class="card-body">
-			<h4 id="profile_displayName" class="card-title">NA</h4>
-			Provider: <span id="profile_provider">NA</span>
-			<br />
-			ID: <span id="profile_id">NA</span>
-			<br />
-			Username: <span id="profile_username">NA</span>
-			<br />
-			Email: <span id="profile_email">NA</span>
-			<br />
-			Gender: <span id="profile_gender">NA</span>
-			<br />
-			Name: <span id="profile_name">NA</span>
-			<br />
-			<a href="/logout" class="btn btn-primary">Logout</a>
-		</div>
-	</div>
+    <div class="card mx-auto mt-5" style="width:200px">
+        <img id="profile_photo" class="card-img-top" src="http://placehold.it/380x500" alt="Card image">
+        <div class="card-body">
+            <h4 id="profile_displayName" class="card-title">NA</h4>
+            Provider: <span id="profile_provider">NA</span>
+            <br/>
+            ID: <span id="profile_id">NA</span>
+            <br/>
+            Username: <span id="profile_username">NA</span>
+            <br/>
+            Email: <span id="profile_email">NA</span>
+            <br/>
+            Gender: <span id="profile_gender">NA</span>
+            <br/>
+            Name: <span id="profile_name">NA</span>
+            <br/>
+            <a href="/logout" class="btn btn-primary">Logout</a>
+        </div>
+    </div>
 
-	<div>
-		<input id="postInput" type="text" placeholder="test">
-		<button id="postButton" type="submit">Submit</button>
-	</div>
+    <div>
+        <input id="postInput" type="text" placeholder="test">
+        <button id="postButton" type="submit">Submit</button>
+    </div>
+    <div id="posts">
+
+    </div>
 </div>
 </body>
 </html>

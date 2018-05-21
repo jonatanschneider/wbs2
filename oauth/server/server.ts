@@ -119,9 +119,9 @@ let TwitterStrategy = pTwitter.Strategy;
 
 let InstagramStrategy = pInstagram.Strategy;
 
-let GoogleStrategy    = pGoogle.Strategy;
+let GoogleStrategy = pGoogle.Strategy;
 
-let fbAccessToken : string;
+let fbAccessToken: string;
 let fbUserId: string;
 //--- FACEBOOK ----------------------------------------------------------------
 passport.use(new FacebookStrategy({
@@ -329,14 +329,37 @@ router.use(bodyParser.urlencoded({
 	extended: true
 }));
 
-router.post('/createPost', function(req, res) {
+router.post('/createPost', function (req, res) {
 	const options = {
 		method: 'POST',
-		uri: 'https://graph.facebook.com/v3.0/'+fbUserId+'/feed',
+		uri: 'https://graph.facebook.com/v3.0/me/feed',
 		qs: {
-			accessToken: fbAccessToken,
-			message: 'Hello world!' //TODO replace with req.body.input
+			access_token: fbAccessToken,
+			message: req.body.input
 		}
 	};
-	request(options);
+	request(options).then(fbRes => {
+		res.status(201);
+		res.send(fbRes);
+	}).catch(err => {
+		res.status(400);
+		res.send(err);
+	});
+});
+
+router.delete('/deletePost', function (req, res) {
+	const options = {
+		method: 'DELETE',
+		uri: 'https://graph.facebook.com/v3.0/' + req.body.id,
+		qs: {
+			access_token: fbAccessToken
+		}
+	};
+	request(options).then(answer => {
+		res.status(200);
+		res.send(answer);
+	}).catch(answer => {
+		res.status(400);
+		res.send(answer);
+	});
 });
