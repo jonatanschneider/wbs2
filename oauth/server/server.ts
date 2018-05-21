@@ -172,31 +172,31 @@ passport.use(new TwitterStrategy({
 
 //--- INSTAGRAM ----------------------------------------------------------------
 passport.use(new InstagramStrategy({
-	clientID: configAuth.instagramAuth.clientID,
-	clientSecret: configAuth.instagramAuth.clientSecret,
-	callbackURL: configAuth.instagramAuth.callbackURL,
-}, function (req, accessToken, refreshToken, profile, done) {
-	const options = {
-		method: 'GET',
-		uri: 'https://api.instagram.com/v1/users/self/',
-		qs: {
-			access_token: accessToken,
-			fields: 'email, picture, gender, first_name, last_name'
-		}
-	};
-	request(options).then(igRes => {
-		let parsedRes = JSON.parse(igRes);
-		profile.emails = [{value: parsedRes.email}];
-		profile.photos = [{value: parsedRes.picture.data.url}];
-		profile.gender = parsedRes.gender;
-		profile.name.givenName = parsedRes.first_name;
-		profile.name.familyName = parsedRes.last_name;
-		done(null, profile);
-	})
-		.catch((err) => {
-			console.log('Error: ' + err);
-		});
-}));
+		clientID: configAuth.instagramAuth.clientID,
+		clientSecret: configAuth.instagramAuth.clientSecret,
+		callbackURL: configAuth.instagramAuth.callbackURL,
+	},
+	function (accessToken, refreshToken, profile, done) {
+		const options = {
+			method: 'GET',
+			uri: 'https://api.instagram.com/v1/users/self/',
+			qs: {
+				access_token: accessToken
+			}
+		};
+		request(options).then(igRes => {
+			let parsedRes = JSON.parse(igRes);
+			profile.emails = [{value: parsedRes.data.email}];
+			profile.photos = [{value: parsedRes.data.profile_picture}];
+			profile.gender = parsedRes.gender;
+			profile.name.givenName = '';
+			profile.name.familyName = parsedRes.data.full_name;
+			done(null, profile);
+		})
+			.catch((err) => {
+				console.log('Error: ' + err);
+			});
+	}));
 
 
 //--- GOOGLE ----------------------------------------------------------------
@@ -300,11 +300,11 @@ router.get('/auth/twitter/callback',
 );
 
 //--- INSTAGRAM routes ---------------------------------------------------------
-router.get('/auth/instagram',
-	passport.authenticate('instagram', {
+router.get('/auth/instagram', passport.authenticate('instagram', {
 		scope: ['basic']
 	})
 );
+
 router.get('/auth/instagram/callback',
 	passport.authenticate('instagram', {
 		successRedirect: '/profile',
