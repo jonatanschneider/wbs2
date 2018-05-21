@@ -10,9 +10,7 @@ import * as pFacebook from 'passport-facebook';
 import * as pTwitter from 'passport-twitter';
 import * as pInstagram from 'passport-instagram';
 import * as pGoogle from 'passport-google-oauth20';
-
 import * as request from 'request-promise';
-
 import * as fs from 'fs';
 import * as http from 'http';
 import * as https from 'https';
@@ -65,7 +63,7 @@ interface iAuth {
 
 interface iFacebookAuth extends iAuth {
 	clientID: string,
-	clientSecret: string
+	clientSecret: string,
 }
 
 interface iInstagramAuth extends iAuth {
@@ -119,6 +117,8 @@ let InstagramStrategy = pInstagram.Strategy;
 
 let GoogleStrategy    = pGoogle.Strategy;
 
+let fbAccessToken : string;
+let fbUserId: string;
 //--- FACEBOOK ----------------------------------------------------------------
 passport.use(new FacebookStrategy({
 		clientID: configAuth.facebookAuth.clientID,
@@ -127,6 +127,8 @@ passport.use(new FacebookStrategy({
 		passReqToCallback: true
 	},
 	function (req, accessToken, refreshToken, profile, done) {
+		fbAccessToken = accessToken;
+		fbUserId = profile.id;
 		// set up parameters of Graph-API request
 		const options = {
 			method: 'GET',
@@ -153,7 +155,7 @@ passport.use(new FacebookStrategy({
 			});
 	}
 ));
-/*
+
 //--- TWITTER ----------------------------------------------------------------
 passport.use(new TwitterStrategy({
 	consumerKey: configAuth.twitterAuth.consumerKey,
@@ -162,8 +164,8 @@ passport.use(new TwitterStrategy({
 	passReqToCallback: true
 }, function (req, token, tokenSecret, profile, done) {
 	done(null, profile);
-}));*/
-/*
+}));
+
 //--- INSTAGRAM ----------------------------------------------------------------
 passport.use(new InstagramStrategy({
 	clientID: configAuth.instagramAuth.clientID,
@@ -191,8 +193,8 @@ passport.use(new InstagramStrategy({
 			console.log('Error: ' + err);
 		});
 }));
-*/
-/*
+
+
 //--- GOOGLE ----------------------------------------------------------------
 passport.use(new GoogleStrategy({
 	clientID: configAuth.googleAuth.clientID,
@@ -214,7 +216,7 @@ passport.use(new GoogleStrategy({
 			console.log('Error: ' + err);
 		});
 }));
-*/
+
 /*****************************************************************************
  *** route middleware to make sure a user is logged in                       *
  *****************************************************************************/
@@ -273,7 +275,7 @@ router.get('/userProfile', isLoggedIn, function (req, res) {
 //--- FACEBOOK routes ---------------------------------------------------------
 router.get('/auth/facebook',
 	passport.authenticate('facebook', {
-		scope: ['public_profile', 'email']
+		scope: ['public_profile', 'email', 'publish_actions']
 	})
 );
 router.get('/auth/facebook/callback',
@@ -324,6 +326,13 @@ router.use(bodyParser.urlencoded({
 }));
 
 router.post('/createPost', function(req, res) {
-	console.log(req.body.input);
-	//TODO Facebook Graph-API access
+	const options = {
+		method: 'POST',
+		uri: 'https://graph.facebook.com/v3.0/'+fbUserId+'/feed',
+		qs: {
+			accessToken: fbAccessToken,
+			message: 'Hello world!' //TODO replace with req.body.input
+		}
+	};
+	request(options);
 });

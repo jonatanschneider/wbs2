@@ -33,7 +33,7 @@ $(function () {
            type: 'POST',
            data: "input="+$('#postInput').val(),
            dataType: 'json',
-           success: () => $('#postInput').text(''), /*TODO get id from created post and add to list below */
+           success: () => $('#postInput').text(''), /*TODO get id from created post and add to list*/
            error: (jqXHR) => console.log(jqXHR)
        });
     });
