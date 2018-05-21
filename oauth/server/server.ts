@@ -84,21 +84,25 @@ interface iGoogleAuth extends iAuth {
 //--- Store authentification credentials in a class ---------------------------
 class AuthConfig {
 	// ToDo: Insert authentication data here
+	// https://developers.facebook.com/
 	facebookAuth: iFacebookAuth = {
 		clientID: '',                  // your App ID
 		clientSecret: '', // your App Secret
 		callbackURL: 'https://localhost:8443/auth/facebook/callback'
 	};
+	// https://apps.twitter.com/
 	twitterAuth: iTwitterAuth = {
 		consumerKey: '',
 		consumerSecret: '',
 		callbackURL: 'https://localhost:8443/auth/twitter/callback'
 	};
+	// https://www.instagram.com/developer/
 	instagramAuth: iInstagramAuth = {
 		clientID: '',
 		clientSecret: '',
 		callbackURL: 'https://localhost:8443/auth/instagram/callback'
 	};
+	// https://console.developers.google.com/apis/dashboard
 	googleAuth: iGoogleAuth = {
 		clientID: '',
 		clientSecret: '',
