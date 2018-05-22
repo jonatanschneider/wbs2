@@ -1,0 +1,14 @@
+$tableHeader: #880E4F;
+$tableAccent: #80CBC4;
+
+thead {
+  background-color: $tableHeader;
+  color: white;
+}
+
+tr {
+  &:nth-child(even) {
+    background-color: $tableAccent;
+  }
+}
+

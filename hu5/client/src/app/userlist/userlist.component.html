@@ -1,0 +1,18 @@
+<table class="table">
+  <thead class="thead-dark">
+    <tr>
+      <td>Firstname</td>
+      <td>Lastname</td>
+      <td>Username</td>
+      <td>Actions</td>
+    </tr>
+  </thead>
+  <tr *ngFor="let user of users">
+    <td>{{user.vorname}}</td>
+    <td>{{user.nachname}}</td>
+    <td>{{user.username}}</td>
+    <td>
+      <button class="btn btn-outline-dark" (click)="editUser(user)">Details</button>
+    </td>
+  </tr>
+</table>
