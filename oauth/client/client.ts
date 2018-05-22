@@ -3,7 +3,7 @@
  **********************************************************************************************************************/
 
 let posts: string[] = [];
-
+let provider: string;
 function showProfileData() {
 	$.ajax({
 		url: 'https://localhost:8443/userProfile',
@@ -34,6 +34,9 @@ function renderProfile(user) {
 	if (user.name) {
 		$('#profile_name').html(user.name.givenName + ' ' + user.name.familyName);
 	}
+	if(user.provider !== 'facebook') {
+		$('#input').hide();
+	}
 }
 
 $(function () {
@@ -55,7 +58,6 @@ $(function () {
 			}
 		});
 	});
-
 });
 
 function deletePost(post: string) {

@@ -1,0 +1,14 @@
+#card {
+    width: 200px;
+    float:left;
+}
+
+#input {
+    padding-top: 100px;
+    padding-left: 30px;
+    float:left;
+}
+
+#postButton {
+    margin-top: 20px;
+}
